@@ -1,0 +1,44 @@
+.rs-table-wrapper {
+  overflow: scroll;
+  position: relative;
+
+  .rs-selected {
+    background-color: green;
+  }
+
+  .rs-table-row {
+    position: absolute;
+    width: 100%;
+
+    .rs-animated {
+      transition: transform .4s, top .4s, height .4s, background-color .1s, opacity .2s, -webkit-transform .4s;
+    }
+  }
+}
+
+.rs-header-wrapper {
+  .rs-header-cell {
+    background-color: darkgrey;
+    color: white;
+
+    &:not(:last-of-type) {
+      border-right: 1px solid white;
+    }
+  }
+}
+
+.rs-table-cell, .rs-header-cell {
+  position: absolute;
+  display: flex;
+  align-items: center;
+  -moz-box-sizing: border-box;
+  -webkit-box-sizing: border-box;
+  box-sizing: border-box;
+  padding: 0 1rem;
+}
+
+
+
+
+
+
