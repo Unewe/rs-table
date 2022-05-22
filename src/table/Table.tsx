@@ -1,6 +1,7 @@
 import React, {useCallback, useEffect, useMemo, useRef, useState} from "react";
 import "../style/index.scss";
 import useParseData from "../hooks/useParseData";
+import {cachedCellRefs, getCellRef} from "../utils/cellCacheUtils";
 
 type Primitive = string | number | boolean | undefined;
 
@@ -17,10 +18,8 @@ export type ColumnDefinition = {
   headerRenderer?: () => React.ReactElement;
   minWidth?: number;
   width?: number;
-}
-
-type ExtraColumnDefinitions = {
-  left: number;
+  left?: number;
+  index?: number;
 }
 
 export type Row = Record<"id", string | number> & Record<string, unknown>;
@@ -56,11 +55,16 @@ const Table: React.FC<TableProps> = (
     headerHeight = DEFAULT_HEADER_HEIGHT
   }
 ): React.ReactElement => {
-  const [expanded, ] = useState<Record<string | number, boolean>>({});
+  const [expanded,] = useState<Record<string | number, boolean>>({});
   const [selected, setSelected] = useState<Record<string | number, boolean>>({});
   const tableRef = useRef<HTMLDivElement | null>(null);
   const [offset, setOffset] = useState(0);
   const [capacity, setCapacity] = useState(0);
+  const colDefsRef = useRef<Array<ColumnDefinition>>(colDefs);
+
+  const edge = useMemo(() => {
+    return capacity + offset;
+  }, [capacity, offset]);
 
   const [visibleRows] = useParseData(data, expanded, "", "");
 
@@ -84,25 +88,19 @@ const Table: React.FC<TableProps> = (
     }
   }, [tableRef.current?.clientHeight]);
 
-  const edge = useMemo(() => {
-    return capacity + offset;
-  }, [capacity, offset]);
-
-  const extraColDefs = useMemo(() => {
+  useEffect(() => {
     if (tableRef.current) {
       const withWidth = colDefs.filter(value => value.width);
       const fixedWidth = withWidth.reduce((acc, value) => acc + value.width!, 0);
       const flexWidth = (tableRef.current!.clientWidth - fixedWidth) / (colDefs.length - withWidth.length);
 
-      return colDefs.reduce((acc: Array<ColumnDefinition & ExtraColumnDefinitions>, value, index) => {
+      colDefsRef.current = colDefs.reduce((acc: Array<ColumnDefinition>, value, index) => {
         const left = index === 0
           ? 0
-          : acc[index - 1].left + (acc[index - 1].width || flexWidth > 0 ? flexWidth : MIN_WIDTH);
+          : (acc[index - 1].left || 0) + (acc[index - 1].width || flexWidth > 0 ? flexWidth : MIN_WIDTH);
         acc[index] = {...value, left, width: value.width || flexWidth, minWidth: value.minWidth || MIN_WIDTH}
         return acc;
       }, []);
-    } else {
-      return [];
     }
   }, [tableRef.current?.clientWidth]);
 
@@ -121,6 +119,27 @@ const Table: React.FC<TableProps> = (
     }
   };
 
+  const handleDrag = useCallback((event: React.DragEvent<HTMLDivElement>, colDef: ColumnDefinition) => {
+    const right = getCellRef(`header_${colDef.key}`).current?.getBoundingClientRect().right;
+
+    if (right && event.pageX > right) {
+      const targetRefs = visibleRows.slice(offset, edge)
+        .map(row => {
+          return [
+            cachedCellRefs[`header_${colDef.key}`],
+            ...colDefs.filter(col => col.key === colDef.key).map(col => cachedCellRefs[`${row.id}_${col.key}`])
+          ];
+        }).flat();
+
+      targetRefs.forEach(ref => {
+        const cellStyle = ref.current?.style;
+        if (cellStyle) {
+          cellStyle.left = `${parseInt(cellStyle.left) + 30}px`;
+        }
+      });
+    }
+  }, [offset, edge])
+
   const virtualRows = useMemo(() => {
     return visibleRows.slice(offset, edge).map((value, index) => (
       <div
@@ -128,25 +147,30 @@ const Table: React.FC<TableProps> = (
         onClick={() => selectRow(value.id)}
         className={"rs-table-row" + (selected[value.id] ? " rs-selected" : "")}
         style={{transform: `translateY(${rowHeight * (offset + index)}px)`, height: `${rowHeight}px`}}>
-        {extraColDefs.map(col => (
-          <div key={col.key} className={"rs-table-cell"}
-               style={{
-                 left: `${col.left}px`,
-                 minWidth: `${col.minWidth}px`,
-                 width: `${col.width}px`,
-                 height: `${rowHeight}px`
-               }}>
-            {col.renderer ? col.renderer(value) : value[col.key] as Primitive}
-          </div>
-        ))}
+        {colDefsRef.current.map(col => (
+            <div key={col.key} className={"rs-table-cell rs-animated"}
+                 ref={getCellRef(`${value.id}_${col.key}`)}
+                 style={{
+                   left: `${col.left}px`,
+                   minWidth: `${col.minWidth}px`,
+                   width: `${col.width}px`,
+                   height: `${rowHeight}px`
+                 }}>
+              {col.renderer ? col.renderer(value) : value[col.key] as Primitive}
+            </div>
+          )
+        )}
       </div>
     ));
   }, [visibleRows, offset, edge, selected]);
 
   const headers = useMemo(() => (
     <div className={"rs-header-wrapper"} style={{height: headerHeight + "px"}}>
-      {extraColDefs.map(col => (
-        <div key={col.key} className={"rs-header-cell"}
+      {colDefsRef.current.map(col => (
+        <div draggable
+             onDrag={(event) => handleDrag(event, col)} key={col.key}
+             ref={getCellRef(`header_${col.key}`)}
+             className={"rs-header-cell"}
              style={{
                left: `${col.left}px`,
                minWidth: `${col.minWidth}px`,
@@ -157,7 +181,7 @@ const Table: React.FC<TableProps> = (
         </div>
       ))}
     </div>
-  ), [extraColDefs]);
+  ), [colDefsRef.current]);
 
   return (
     <div style={{height: "100%"}}>

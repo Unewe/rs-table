@@ -12,7 +12,6 @@ const useParseData = (data: Array<Row>,
                       expanded: Record<string | number, boolean>,
                       group?: string,
                       tree?: string): [Array<Row>, Array<Row>, Record<string, Array<Row>>] => {
-
   return useMemo(() => {
     if (group && tree) {
       console.warn("Select only 1 option, Group or Tree!")

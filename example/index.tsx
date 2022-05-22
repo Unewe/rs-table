@@ -3,11 +3,19 @@ import * as React from 'react';
 import * as ReactDOM from 'react-dom';
 import Table from "../src";
 import {ColumnDefinition} from "../src/table/Table";
+import {useState} from "react";
 
-const mockData: Array<{id: number, name: string, param: string, age: number, firstName: string, lastName: string}> = [];
+const mockData: Array<{ id: number, name: string, param: string, age: number, firstName: string, lastName: string }> = [];
 
 for (let i = 0; i < 300000; i++) {
-  mockData.push({id: i, name: `Value ${i}`, param: `Param ${i}`, age: i, firstName: `FirstName ${i}`, lastName: `LastName ${i}`});
+  mockData.push({
+    id: i,
+    name: `Value ${i}`,
+    param: `Param ${i}`,
+    age: i,
+    firstName: `FirstName ${i}`,
+    lastName: `LastName ${i}`
+  });
 }
 
 const colDefs: Array<ColumnDefinition> = [
@@ -20,11 +28,13 @@ const colDefs: Array<ColumnDefinition> = [
 ]
 
 const App = () => {
+  const [rows] = useState(mockData);
+
   return (
     <div style={{height: "400px", position: "relative"}}>
-      <Table data={mockData} colDefs={colDefs} />
+      <Table data={rows} colDefs={colDefs}/>
     </div>
   );
 };
 
-ReactDOM.render(<App />, document.getElementById('root'));
+ReactDOM.render(<App/>, document.getElementById('root'));
