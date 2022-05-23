@@ -139,6 +139,7 @@ const Table: React.FC<TableProps> = (
         {colDefsRef.current.map(col => (
             <div key={col.key} className={"rs-table-cell rs-animated"}
                  ref={getCellRef(`${row.id}_${col.key}`)}
+                 aria-colindex={col.index}
                  style={{
                    left: `${col.left}px`,
                    minWidth: `${col.minWidth}px`,
@@ -160,6 +161,7 @@ const Table: React.FC<TableProps> = (
         <div draggable
              onDrag={(event) => handleDrag(event, col, virtualRows)} key={col.key}
              ref={getCellRef(`header_${col.key}`)}
+             aria-colindex={col.index}
              className={"rs-header-cell rs-animated"}
              style={{
                left: `${col.left}px`,

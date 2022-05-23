@@ -5,9 +5,10 @@ import {cachedCellRefs} from "./cellCacheUtils";
 /**
  * The method checks and returns the new column order.
  * @param event Drag event, to get drag information.
- * @param tableRef Ref таблицы.
+ * @param tableRef Ref of table, to get page offset.
  * @param colDef Dragged column.
  * @param colDefsRef Column definitions.
+ * @param rows Rendered rows, to change position with headers.
  *
  * @return undefined if colDefs not changed, or new colDefs.
  */
@@ -56,16 +57,18 @@ export const updateDefsPosition = (
   }
   // Update style.
   return colsWithRef.map(({ref, ...col}) => {
-    const style = ref.current?.style;
+    const headerElement = ref.current;
 
-    if (style) {
-      style.left = `${col.left}px`;
+    if (headerElement) {
+      headerElement.style.left = `${col.left}px`;
+      headerElement.ariaColIndex = col.index.toString();
       rows.forEach(row => {
-        const cellStyle = cachedCellRefs[`${row.id}_${col.key}`].current?.style;
-        if (cellStyle) {
-          cellStyle.left = `${col.left}px`;
+        const element = cachedCellRefs[`${row.id}_${col.key}`].current;
+        if (element) {
+          element.style.left = `${col.left}px`;
+          element.ariaColIndex = col.index.toString();
         }
-      })
+      });
     }
 
     return {...col};

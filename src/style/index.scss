@@ -3,7 +3,9 @@
   position: relative;
 
   .rs-selected {
-    background-color: green;
+    .rs-table-cell {
+      background-color: green;
+    }
   }
 
   .rs-table-row {
@@ -16,11 +18,10 @@
   .rs-header-cell {
     background-color: darkgrey;
     color: white;
-    border-right: 1px solid white;
 
-    //&:not(:last-of-type) {
-    //  border-right: 1px solid white;
-    //}
+    &:not([aria-colindex="0"]) {
+      border-left: 1px solid white;
+    }
   }
 }
 
