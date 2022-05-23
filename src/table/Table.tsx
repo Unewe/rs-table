@@ -1,11 +1,12 @@
 import React, {useCallback, useEffect, useMemo, useRef, useState} from "react";
 import "../style/index.scss";
 import useParseData from "../hooks/useParseData";
-import {cachedCellRefs, getCellRef} from "../utils/cellCacheUtils";
+import {getCellRef} from "../utils/cellCacheUtils";
+import {updateDefsPosition} from "../utils/cellPositionUtiles";
 
 type Primitive = string | number | boolean | undefined;
 
-export type ColumnDefinition = {
+type Definition = {
   name: string;
   key: string;
   sortable?: boolean;
@@ -16,11 +17,17 @@ export type ColumnDefinition = {
   tree?: boolean;
   renderer?: (value: Row) => React.ReactElement;
   headerRenderer?: () => React.ReactElement;
+}
+
+type ExtraDefinition = {
   minWidth?: number;
   width?: number;
   left?: number;
   index?: number;
 }
+
+export type ColumnDefinition = Definition & ExtraDefinition;
+export type RequiredDefinition = Definition & Required<ExtraDefinition>;
 
 export type Row = Record<"id", string | number> & Record<string, unknown>;
 
@@ -35,13 +42,6 @@ type TableProps = {
   onExpand?: () => {};
   virtual?: boolean;
 }
-
-// type TableApi = {
-//   expanded: Array<string | number>;
-//   selected: Array<string | number>;
-//   toggle: (row: Row) => void;
-//   select: (row: Row) => void;
-// }
 
 const DEFAULT_ROW_HEIGHT = 40;
 const DEFAULT_HEADER_HEIGHT = 45;
@@ -60,13 +60,14 @@ const Table: React.FC<TableProps> = (
   const tableRef = useRef<HTMLDivElement | null>(null);
   const [offset, setOffset] = useState(0);
   const [capacity, setCapacity] = useState(0);
-  const colDefsRef = useRef<Array<ColumnDefinition>>(colDefs);
+  const colDefsRef = useRef<Array<RequiredDefinition>>([]);
 
   const edge = useMemo(() => {
     return capacity + offset;
   }, [capacity, offset]);
 
   const [visibleRows] = useParseData(data, expanded, "", "");
+  const virtualRows = useMemo(() => visibleRows.slice(offset, edge), [visibleRows, offset, edge]);
 
   const selectRow = useCallback((id: number | string) => {
     setSelected((selected) => {
@@ -94,11 +95,11 @@ const Table: React.FC<TableProps> = (
       const fixedWidth = withWidth.reduce((acc, value) => acc + value.width!, 0);
       const flexWidth = (tableRef.current!.clientWidth - fixedWidth) / (colDefs.length - withWidth.length);
 
-      colDefsRef.current = colDefs.reduce((acc: Array<ColumnDefinition>, value, index) => {
+      colDefsRef.current = colDefs.reduce((acc: Array<RequiredDefinition>, value, index) => {
         const left = index === 0
           ? 0
           : (acc[index - 1].left || 0) + (acc[index - 1].width || flexWidth > 0 ? flexWidth : MIN_WIDTH);
-        acc[index] = {...value, left, width: value.width || flexWidth, minWidth: value.minWidth || MIN_WIDTH}
+        acc[index] = {...value, left, width: value.width || flexWidth, minWidth: value.minWidth || MIN_WIDTH, index}
         return acc;
       }, []);
     }
@@ -119,58 +120,47 @@ const Table: React.FC<TableProps> = (
     }
   };
 
-  const handleDrag = useCallback((event: React.DragEvent<HTMLDivElement>, colDef: ColumnDefinition) => {
-    const right = getCellRef(`header_${colDef.key}`).current?.getBoundingClientRect().right;
+  const handleDrag = useCallback((event: React.DragEvent<HTMLDivElement>, colDef: RequiredDefinition, rows: Array<Row>) => {
+    const newColRefs = updateDefsPosition(event, tableRef, colDef, colDefsRef, rows);
 
-    if (right && event.pageX > right) {
-      const targetRefs = visibleRows.slice(offset, edge)
-        .map(row => {
-          return [
-            cachedCellRefs[`header_${colDef.key}`],
-            ...colDefs.filter(col => col.key === colDef.key).map(col => cachedCellRefs[`${row.id}_${col.key}`])
-          ];
-        }).flat();
-
-      targetRefs.forEach(ref => {
-        const cellStyle = ref.current?.style;
-        if (cellStyle) {
-          cellStyle.left = `${parseInt(cellStyle.left) + 30}px`;
-        }
-      });
+    if (newColRefs) {
+      colDefsRef.current = newColRefs;
     }
-  }, [offset, edge])
+  }, []);
 
-  const virtualRows = useMemo(() => {
-    return visibleRows.slice(offset, edge).map((value, index) => (
+  // TODO optimisation with React.cloneElement or smth. else.
+  const tableRows = useMemo(() => {
+    return virtualRows.map((row, index) => (
       <div
-        id={value.id.toString()} key={value.id}
-        onClick={() => selectRow(value.id)}
-        className={"rs-table-row" + (selected[value.id] ? " rs-selected" : "")}
+        id={row.id.toString()} key={row.id}
+        onClick={() => selectRow(row.id)}
+        className={"rs-table-row" + (selected[row.id] ? " rs-selected" : "")}
         style={{transform: `translateY(${rowHeight * (offset + index)}px)`, height: `${rowHeight}px`}}>
         {colDefsRef.current.map(col => (
             <div key={col.key} className={"rs-table-cell rs-animated"}
-                 ref={getCellRef(`${value.id}_${col.key}`)}
+                 ref={getCellRef(`${row.id}_${col.key}`)}
                  style={{
                    left: `${col.left}px`,
                    minWidth: `${col.minWidth}px`,
                    width: `${col.width}px`,
                    height: `${rowHeight}px`
                  }}>
-              {col.renderer ? col.renderer(value) : value[col.key] as Primitive}
+              {col.renderer ? col.renderer(row) : row[col.key] as Primitive}
             </div>
           )
         )}
       </div>
     ));
-  }, [visibleRows, offset, edge, selected]);
+  }, [virtualRows, offset, edge, selected]);
 
-  const headers = useMemo(() => (
+  // TODO optimisation with React.cloneElement or smth. else.
+  const tableHeaders = useMemo(() => (
     <div className={"rs-header-wrapper"} style={{height: headerHeight + "px"}}>
       {colDefsRef.current.map(col => (
         <div draggable
-             onDrag={(event) => handleDrag(event, col)} key={col.key}
+             onDrag={(event) => handleDrag(event, col, virtualRows)} key={col.key}
              ref={getCellRef(`header_${col.key}`)}
-             className={"rs-header-cell"}
+             className={"rs-header-cell rs-animated"}
              style={{
                left: `${col.left}px`,
                minWidth: `${col.minWidth}px`,
@@ -181,16 +171,16 @@ const Table: React.FC<TableProps> = (
         </div>
       ))}
     </div>
-  ), [colDefsRef.current]);
+  ), [colDefsRef.current, virtualRows]);
 
   return (
     <div style={{height: "100%"}}>
-      {headers}
+      {tableHeaders}
       <div ref={tableRef} className={"rs-table-wrapper"}
            style={{maxHeight: "100%", width: "100%"}}
            onScroll={onScroll}>
         <div className={"rs-table-container"} style={{height: containerHeight + "px"}}>
-          {virtualRows}
+          {tableRows}
         </div>
       </div>
     </div>

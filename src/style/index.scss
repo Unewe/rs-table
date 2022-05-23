@@ -9,10 +9,6 @@
   .rs-table-row {
     position: absolute;
     width: 100%;
-
-    .rs-animated {
-      transition: transform .4s, left .4s, top .4s, height .4s, background-color .1s, opacity .2s, -webkit-transform .4s;
-    }
   }
 }
 
@@ -20,10 +16,11 @@
   .rs-header-cell {
     background-color: darkgrey;
     color: white;
+    border-right: 1px solid white;
 
-    &:not(:last-of-type) {
-      border-right: 1px solid white;
-    }
+    //&:not(:last-of-type) {
+    //  border-right: 1px solid white;
+    //}
   }
 }
 
@@ -37,8 +34,6 @@
   padding: 0 1rem;
 }
 
-
-
-
-
-
+.rs-animated {
+  transition: transform .4s, left .4s, top .4s, height .4s, background-color .1s, opacity .2s, -webkit-transform .4s;
+}
