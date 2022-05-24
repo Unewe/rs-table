@@ -7,7 +7,7 @@ import {useState} from "react";
 
 const mockData: Array<{ id: number, name: string, param: string, age: number, firstName: string, lastName: string }> = [];
 
-for (let i = 0; i < 300000; i++) {
+for (let i = 0; i < 100000; i++) {
   mockData.push({
     id: i,
     name: `Value ${i}`,
@@ -20,7 +20,7 @@ for (let i = 0; i < 300000; i++) {
 
 const colDefs: Array<ColumnDefinition> = [
   {name: "id", key: "id"},
-  {name: "name", key: "name", renderer: (value) => <div style={{color: "red"}}>{value.name as string}</div>},
+  {name: "name", key: "name", width: 100, renderer: (value) => <div style={{color: "red"}}>{value.name as string}</div>},
   {name: "param", key: "param"},
   {name: "age", key: "age"},
   {name: "firstName", key: "firstName"},

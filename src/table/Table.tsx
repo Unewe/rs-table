@@ -3,6 +3,7 @@ import "../style/index.scss";
 import useParseData from "../hooks/useParseData";
 import {getCellRef} from "../utils/cellCacheUtils";
 import {updateDefsPosition} from "../utils/cellPositionUtiles";
+import Draggable from "../components/Draggable";
 
 type Primitive = string | number | boolean | undefined;
 
@@ -98,7 +99,10 @@ const Table: React.FC<TableProps> = (
       colDefsRef.current = colDefs.reduce((acc: Array<RequiredDefinition>, value, index) => {
         const left = index === 0
           ? 0
-          : (acc[index - 1].left || 0) + (acc[index - 1].width || flexWidth > 0 ? flexWidth : MIN_WIDTH);
+          : (acc[index - 1].left || 0)
+          + (acc[index - 1].width || flexWidth > 0
+            ? acc[index - 1].width || flexWidth
+            : MIN_WIDTH);
         acc[index] = {...value, left, width: value.width || flexWidth, minWidth: value.minWidth || MIN_WIDTH, index}
         return acc;
       }, []);
@@ -120,7 +124,7 @@ const Table: React.FC<TableProps> = (
     }
   };
 
-  const handleDrag = useCallback((event: React.DragEvent<HTMLDivElement>, colDef: RequiredDefinition, rows: Array<Row>) => {
+  const handleDrag = useCallback((event: MouseEvent, colDef: RequiredDefinition, rows: Array<Row>) => {
     const newColRefs = updateDefsPosition(event, tableRef, colDef, colDefsRef, rows);
 
     if (newColRefs) {
@@ -158,28 +162,28 @@ const Table: React.FC<TableProps> = (
   const tableHeaders = useMemo(() => (
     <div className={"rs-header-wrapper"} style={{height: headerHeight + "px"}}>
       {colDefsRef.current.map(col => (
-        <div draggable
-             onDrag={(event) => handleDrag(event, col, virtualRows)} key={col.key}
-             ref={getCellRef(`header_${col.key}`)}
-             aria-colindex={col.index}
-             className={"rs-header-cell rs-animated"}
-             style={{
-               left: `${col.left}px`,
-               minWidth: `${col.minWidth}px`,
-               width: `${col.width}px`,
-               height: `${headerHeight}px`
-             }}>
-          {col.headerRenderer ? col.headerRenderer() : col.name}
-        </div>
+        <Draggable key={col.key} onDrag={(event) => handleDrag(event, col, virtualRows)}>
+          <div ref={getCellRef(`header_${col.key}`)}
+               aria-colindex={col.index}
+               className={"rs-header-cell rs-animated"}
+               style={{
+                 left: `${col.left}px`,
+                 minWidth: `${col.minWidth}px`,
+                 width: `${col.width}px`,
+                 height: `${headerHeight}px`
+               }}>
+            {col.headerRenderer ? col.headerRenderer() : col.name}
+          </div>
+        </Draggable>
       ))}
     </div>
   ), [colDefsRef.current, virtualRows]);
 
   return (
-    <div style={{height: "100%"}}>
+    <div style={{height: "100%"}} className={"rs-wrapper"}>
       {tableHeaders}
       <div ref={tableRef} className={"rs-table-wrapper"}
-           style={{maxHeight: "100%", width: "100%"}}
+           style={{maxHeight: "100%", maxWidth: "100%", width: "100%"}}
            onScroll={onScroll}>
         <div className={"rs-table-container"} style={{height: containerHeight + "px"}}>
           {tableRows}
