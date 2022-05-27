@@ -63,7 +63,7 @@ export const updateDefsPosition = (
       headerElement.style.left = `${col.left}px`;
       headerElement.setAttribute("aria-colindex", col.index.toString());
       rows.forEach(row => {
-        const element = cachedCellRefs[`${row.id}_${col.key}`].current;
+        const element = cachedCellRefs[`${row.id}_${col.key}`]?.current;
         if (element) {
           element.style.left = `${col.left}px`;
           element.setAttribute("aria-colindex", col.index.toString());

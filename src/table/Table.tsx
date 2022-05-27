@@ -5,6 +5,7 @@ import {updateDefsPosition} from "../utils/cellPositionUtiles";
 import Draggable from "../components/Draggable";
 import TableRow from "../components/TableRow";
 import HeaderCell from "../components/HeaderCell";
+import GroupRow from "../components/GroupRow";
 
 type Definition = {
   name: string;
@@ -41,6 +42,7 @@ type TableProps = {
   select?: () => {};
   onExpand?: () => {};
   virtual?: boolean;
+  groupBy?: string;
 }
 
 const DEFAULT_ROW_HEIGHT = 40;
@@ -52,10 +54,11 @@ const Table: React.FC<TableProps> = (
     data,
     colDefs,
     rowHeight = DEFAULT_ROW_HEIGHT,
-    headerHeight = DEFAULT_HEADER_HEIGHT
+    headerHeight = DEFAULT_HEADER_HEIGHT,
+    groupBy
   }
 ): React.ReactElement => {
-  const [expanded,] = useState<Record<string | number, boolean>>({});
+  const [expanded, setExpanded] = useState<Record<string | number, boolean>>({});
   const [selected, setSelected] = useState<Record<string | number, boolean>>({});
   const tableRef = useRef<HTMLDivElement | null>(null);
   const [offset, setOffset] = useState(0);
@@ -66,7 +69,7 @@ const Table: React.FC<TableProps> = (
     return capacity + offset;
   }, [capacity, offset]);
 
-  const [visibleRows] = useParseData(data, expanded, "", "");
+  const [visibleRows] = useParseData(data, expanded, groupBy, "");
   const virtualRows = useMemo(() => visibleRows.slice(offset, edge), [visibleRows, offset, edge]);
 
   const selectRow = useCallback((id: number | string) => {
@@ -78,6 +81,19 @@ const Table: React.FC<TableProps> = (
       } else {
         selected[id] = true;
         return {...selected, [id]: true};
+      }
+    });
+  }, []);
+
+  const expandRow = useCallback((id: string | number) => {
+    setExpanded((expanded) => {
+      if (expanded[id]) {
+        const tmp = {...expanded};
+        delete tmp[id];
+        return tmp;
+      } else {
+        expanded[id] = true;
+        return {...expanded, [id]: true};
       }
     });
   }, []);
@@ -133,15 +149,24 @@ const Table: React.FC<TableProps> = (
 
   const tableRows = useMemo(() => {
     return virtualRows.map((row, index) => (
-      <TableRow
-        key={row.id}
-        row={row}
-        selectRow={selectRow}
-        selected={selected}
-        rowHeight={rowHeight}
-        offset={offset}
-        index={index}
-        colDefsRef={colDefsRef}/>
+      row.type === "_GroupRow"
+        ? <GroupRow
+          key={row.id}
+          offset={offset}
+          index={index}
+          row={row}
+          expanded={expanded}
+          rowHeight={rowHeight}
+          expandRow={expandRow}/>
+        : <TableRow
+          key={row.id}
+          row={row}
+          selectRow={selectRow}
+          selected={selected}
+          rowHeight={rowHeight}
+          offset={offset}
+          index={index}
+          colDefsRef={colDefsRef}/>
     ));
   }, [virtualRows, offset, edge, selected]);
 
@@ -149,7 +174,7 @@ const Table: React.FC<TableProps> = (
     <div className={"rs-header-wrapper"} style={{height: headerHeight + "px"}}>
       {colDefsRef.current.map(col => (
         <Draggable key={col.key} dragId={`header_${col.key}`} onDrag={(event) => handleDrag(event, col, virtualRows)}>
-          <HeaderCell col={col} headerHeight={headerHeight} />
+          <HeaderCell col={col} headerHeight={headerHeight}/>
         </Draggable>
       ))}
     </div>

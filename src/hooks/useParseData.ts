@@ -8,10 +8,11 @@ const groupBy = (rows: Array<Row>, groupBy: keyof Row): Record<string, Array<Row
   }, {});
 }
 
-const useParseData = (data: Array<Row>,
-                      expanded: Record<string | number, boolean>,
-                      group?: string,
-                      tree?: string): [Array<Row>, Array<Row>, Record<string, Array<Row>>] => {
+const useParseData = (
+  data: Array<Row>,
+  expanded: Record<string | number, boolean>,
+  group?: string,
+  tree?: string): [Array<Row>, Array<Row>, Record<string, Array<Row>>] => {
   return useMemo(() => {
     if (group && tree) {
       console.warn("Select only 1 option, Group or Tree!")
@@ -19,22 +20,28 @@ const useParseData = (data: Array<Row>,
 
     if (group) {
       const grouped = groupBy(data, group);
-      const visible = Object.keys(grouped).map(key => {
-        const groupRows: Array<Row> = [{
-          type: "__GroupRow",
+
+      const visible: Array<Row> = [];
+      const all: Array<Row> = [];
+
+      Object.keys(grouped).forEach(key => {
+        const groupRow: Row = {
+          type: "_GroupRow",
           id: `Group:${key}`,
           count: grouped[key].length,
           name: key
-        }];
+        };
 
+        all.push(groupRow);
+        all.push(...grouped[key]);
+
+        visible.push(groupRow);
         if (expanded[key]) {
-          groupRows.push(...grouped[key]);
+          visible.push(...grouped[key]);
         }
+      });
 
-        return groupRows;
-      }).flat();
-
-      return [visible, data, grouped];
+      return [visible.flat(), all.flat(), grouped];
     }
 
     return [data, data, {}];

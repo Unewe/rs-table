@@ -30,7 +30,7 @@
   }
 }
 
-.rs-table-cell, .rs-header-cell {
+.rs-table-cell, .rs-header-cell, .rs-group-row {
   position: absolute;
   display: flex;
   align-items: center;
@@ -38,6 +38,10 @@
   -webkit-box-sizing: border-box;
   box-sizing: border-box;
   padding: 0 1rem;
+}
+
+.rs-group-row {
+  width: 100%;
 }
 
 .rs-animated {

@@ -5,7 +5,7 @@ import Table from "../src";
 import {ColumnDefinition} from "../src/table/Table";
 import {useState} from "react";
 
-const mockData: Array<{ id: number, name: string, param: string, age: number, firstName: string, lastName: string }> = [];
+const mockData: Array<{ id: number, name: string, param: string, age: number, firstName: string, lastName: string, group: string }> = [];
 
 for (let i = 0; i < 10000; i++) {
   mockData.push({
@@ -14,7 +14,8 @@ for (let i = 0; i < 10000; i++) {
     param: `Param ${i}`,
     age: i,
     firstName: `FirstName ${i}`,
-    lastName: `LastName ${i}`
+    lastName: `LastName ${i}`,
+    group: `Group ${Math.random().toFixed(1)}`
   });
 }
 
@@ -33,7 +34,7 @@ const App = () => {
   return (
     <div>
       <div style={{height: "400px", position: "relative"}}>
-        <Table data={rows} colDefs={colDefs}/>
+        <Table data={rows} colDefs={colDefs} groupBy={"group"}/>
       </div>
     </div>
   );
