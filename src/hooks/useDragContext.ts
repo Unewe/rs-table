@@ -4,7 +4,6 @@ type MouseListener = (event: MouseEvent) => void;
 type DragEventInitiator = (event: MouseEvent, onDrag: MouseListener, cacheName?: string) => void;
 
 class DragContext {
-  private ghostWrapper?: HTMLDivElement;
   private cacheName: string = "";
   private initialPosition: Record<"x" | "y", number> | undefined;
   private onDrag: MouseListener | undefined;
@@ -26,16 +25,8 @@ class DragContext {
       document.removeEventListener("mousemove", this.initiator, true);
       document.addEventListener("mousemove", this.onMouseMove, true);
 
-      // Create Drag ghost.
       const dragElementRef = cachedCellRefs[this.cacheName];
       if (dragElementRef?.current) {
-        this.ghostWrapper = document.createElement("div");
-        document.body.appendChild(this.ghostWrapper);
-        const clone = dragElementRef.current.cloneNode(true) as HTMLDivElement;
-        clone.classList.remove("rs-animated");
-        clone.classList.add("rs-hidden");
-        this.ghostWrapper.appendChild(clone);
-
         dragElementRef.current.classList.add("rs-dragged");
       }
     }
@@ -57,15 +48,6 @@ class DragContext {
     if (this.onDrag) {
       this.onDrag(event);
     }
-
-    // Move Drag ghost.
-    if (this.ghostWrapper?.firstChild) {
-      const clone = this.ghostWrapper.firstChild as HTMLDivElement;
-      const rect = clone.getBoundingClientRect();
-      clone.style.left = `${(event.pageX | event.clientX) - rect.width / 2}px`;
-      clone.style.top = `${(event.pageY | event.clientY) - rect.height / 2}px`;
-      clone.classList.remove("rs-hidden");
-    }
   }
 
   stopPropagation: MouseListener = (event) => event.stopPropagation();
@@ -78,11 +60,6 @@ class DragContext {
     document.removeEventListener("mouseup", this.onMouseUp, true);
     // Allow click!
     setTimeout(() => document.removeEventListener("click", this.stopPropagation, true));
-
-    // Remove Drag ghost.
-    if (this.ghostWrapper) {
-      document.body.removeChild(this.ghostWrapper);
-    }
 
     const dragElementRef = cachedCellRefs[this.cacheName];
     if (dragElementRef?.current) {

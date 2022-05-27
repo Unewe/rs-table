@@ -31,8 +31,10 @@ const App = () => {
   const [rows] = useState(mockData);
 
   return (
-    <div style={{height: "400px", position: "relative"}}>
-      <Table data={rows} colDefs={colDefs}/>
+    <div>
+      <div style={{height: "400px", position: "relative"}}>
+        <Table data={rows} colDefs={colDefs}/>
+      </div>
     </div>
   );
 };
