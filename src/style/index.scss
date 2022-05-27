@@ -21,14 +21,12 @@
   }
 }
 
-.rs-header-wrapper {
-  .rs-header-cell {
-    background-color: darkgrey;
-    color: white;
+.rs-header-cell {
+  background-color: darkgrey;
+  color: white;
 
-    &:not([aria-colindex="0"]) {
-      border-left: 1px solid white;
-    }
+  &:not([aria-colindex="0"]) {
+    border-left: 1px solid white;
   }
 }
 
@@ -44,4 +42,12 @@
 
 .rs-animated {
   transition: transform .4s, left .4s, top .4s, height .4s, background-color .1s, opacity .2s, -webkit-transform .4s;
+}
+
+.rs-dragged {
+  opacity: .5;
+}
+
+.rs-hidden {
+  opacity: 0;
 }

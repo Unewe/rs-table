@@ -162,7 +162,7 @@ const Table: React.FC<TableProps> = (
   const tableHeaders = useMemo(() => (
     <div className={"rs-header-wrapper"} style={{height: headerHeight + "px"}}>
       {colDefsRef.current.map(col => (
-        <Draggable key={col.key} onDrag={(event) => handleDrag(event, col, virtualRows)}>
+        <Draggable key={col.key} dragId={`header_${col.key}`} onDrag={(event) => handleDrag(event, col, virtualRows)}>
           <div ref={getCellRef(`header_${col.key}`)}
                aria-colindex={col.index}
                className={"rs-header-cell rs-animated"}
