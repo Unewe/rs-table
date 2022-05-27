@@ -7,7 +7,7 @@ import {useState} from "react";
 
 const mockData: Array<{ id: number, name: string, param: string, age: number, firstName: string, lastName: string }> = [];
 
-for (let i = 0; i < 100000; i++) {
+for (let i = 0; i < 10000; i++) {
   mockData.push({
     id: i,
     name: `Value ${i}`,

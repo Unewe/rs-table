@@ -1,11 +1,10 @@
 import React, {useCallback, useEffect, useMemo, useRef, useState} from "react";
 import "../style/index.scss";
 import useParseData from "../hooks/useParseData";
-import {getCellRef} from "../utils/cellCacheUtils";
 import {updateDefsPosition} from "../utils/cellPositionUtiles";
 import Draggable from "../components/Draggable";
-
-type Primitive = string | number | boolean | undefined;
+import TableRow from "../components/TableRow";
+import HeaderCell from "../components/HeaderCell";
 
 type Definition = {
   name: string;
@@ -124,7 +123,7 @@ const Table: React.FC<TableProps> = (
     }
   };
 
-  const handleDrag = useCallback((event: MouseEvent, colDef: RequiredDefinition, rows: Array<Row>) => {
+  const handleDrag = useCallback((event: MouseEvent, colDef: RequiredDefinition, rows: Array<Row>): void => {
     const newColRefs = updateDefsPosition(event, tableRef, colDef, colDefsRef, rows);
 
     if (newColRefs) {
@@ -132,48 +131,25 @@ const Table: React.FC<TableProps> = (
     }
   }, []);
 
-  // TODO optimisation with React.cloneElement or smth. else.
   const tableRows = useMemo(() => {
     return virtualRows.map((row, index) => (
-      <div
-        id={row.id.toString()} key={row.id}
-        onClick={() => selectRow(row.id)}
-        className={"rs-table-row" + (selected[row.id] ? " rs-selected" : "")}
-        style={{transform: `translateY(${rowHeight * (offset + index)}px)`, height: `${rowHeight}px`}}>
-        {colDefsRef.current.map(col => (
-            <div key={col.key} className={"rs-table-cell rs-animated"}
-                 ref={getCellRef(`${row.id}_${col.key}`)}
-                 aria-colindex={col.index}
-                 style={{
-                   left: `${col.left}px`,
-                   minWidth: `${col.minWidth}px`,
-                   width: `${col.width}px`,
-                   height: `${rowHeight}px`
-                 }}>
-              {col.renderer ? col.renderer(row) : row[col.key] as Primitive}
-            </div>
-          )
-        )}
-      </div>
+      <TableRow
+        key={row.id}
+        row={row}
+        selectRow={selectRow}
+        selected={selected}
+        rowHeight={rowHeight}
+        offset={offset}
+        index={index}
+        colDefsRef={colDefsRef}/>
     ));
   }, [virtualRows, offset, edge, selected]);
 
-  // TODO optimisation with React.cloneElement or smth. else.
   const tableHeaders = useMemo(() => (
     <div className={"rs-header-wrapper"} style={{height: headerHeight + "px"}}>
       {colDefsRef.current.map(col => (
         <Draggable key={col.key} dragId={`header_${col.key}`} onDrag={(event) => handleDrag(event, col, virtualRows)}>
-          <div ref={getCellRef(`header_${col.key}`)}
-               aria-colindex={col.index}
-               className={"rs-header-cell rs-animated"}
-               style={{
-                 left: `${col.left}px`,
-                 minWidth: `${col.minWidth}px`,
-                 width: `${col.width}px`,
-                 height: `${headerHeight}px`
-               }}>
-            {col.headerRenderer ? col.headerRenderer() : col.name}
-          </div>
+          <HeaderCell col={col} headerHeight={headerHeight} />
         </Draggable>
       ))}
     </div>
