@@ -51,3 +51,12 @@
 .rs-dragged {
   opacity: .5;
 }
+
+.rs-chevron {
+  margin-right: 15px;
+  transition: transform .1s;
+}
+
+.rs-bottom {
+  transform: rotate(90deg);
+}
