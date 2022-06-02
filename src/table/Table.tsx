@@ -7,6 +7,15 @@ import TableRow from "../components/TableRow";
 import HeaderCell from "../components/HeaderCell";
 import GroupRow from "../components/GroupRow";
 
+export type TableApi = {
+  selectRow: (id: string | number) => void;
+  expandRow: (id: string | number) => void;
+  selected: Record<string | number, boolean>;
+  expanded: Record<string | number, boolean>;
+  forceUpdate: () => void;
+  treeBy?: string;
+}
+
 type Definition = {
   name: string;
   key: string;
@@ -14,9 +23,8 @@ type Definition = {
   draggable?: boolean;
   fixed?: "left" | "right";
   sort?: "asc" | "desc";
-  group?: boolean;
   tree?: boolean;
-  renderer?: (value: Row) => React.ReactElement;
+  renderer?: (value: Row, api: React.RefObject<TableApi>) => React.ReactElement;
   headerRenderer?: () => React.ReactElement;
 }
 
@@ -43,6 +51,8 @@ type TableProps = {
   onExpand?: () => {};
   virtual?: boolean;
   groupBy?: string;
+  treeBy?: string;
+  virtualization?: boolean;
 }
 
 const DEFAULT_ROW_HEIGHT = 40;
@@ -55,22 +65,35 @@ const Table: React.FC<TableProps> = (
     colDefs,
     rowHeight = DEFAULT_ROW_HEIGHT,
     headerHeight = DEFAULT_HEADER_HEIGHT,
-    groupBy
+    groupBy,
+    treeBy,
+    virtualization = true,
   }
 ): React.ReactElement => {
+  const [update, forceUpdate] = useState(false);
   const [expanded, setExpanded] = useState<Record<string | number, boolean>>({});
   const [selected, setSelected] = useState<Record<string | number, boolean>>({});
   const tableRef = useRef<HTMLDivElement | null>(null);
   const [offset, setOffset] = useState(0);
   const [capacity, setCapacity] = useState(0);
   const colDefsRef = useRef<Array<RequiredDefinition>>([]);
+  const apiRef = useRef<TableApi>({
+    expanded: {},
+    selected: {},
+    expandRow: () => {
+    },
+    selectRow: () => {
+    },
+    forceUpdate: () => {
+    }
+  });
 
   const edge = useMemo(() => {
     return capacity + offset;
   }, [capacity, offset]);
 
-  const [visibleRows] = useParseData(data, expanded, groupBy, "");
-  const virtualRows = useMemo(() => visibleRows.slice(offset, edge), [visibleRows, offset, edge]);
+  const [visibleRows] = useParseData(data, expanded, groupBy, treeBy);
+  const virtualRows = useMemo(() => virtualization ? visibleRows.slice(offset, edge) : visibleRows, [visibleRows, offset, edge]);
 
   const selectRow = useCallback((id: number | string) => {
     setSelected((selected) => {
@@ -98,6 +121,17 @@ const Table: React.FC<TableProps> = (
     });
   }, []);
 
+  apiRef.current = {
+    expanded,
+    selected,
+    expandRow,
+    selectRow,
+    forceUpdate: () => {
+      forceUpdate(value => !value);
+    },
+    treeBy,
+  };
+
   useEffect(() => {
     if (tableRef.current?.clientHeight) {
       const changedCapacity = tableRef.current.clientHeight / rowHeight * 4;
@@ -121,8 +155,16 @@ const Table: React.FC<TableProps> = (
         acc[index] = {...value, left, width: value.width || flexWidth, minWidth: value.minWidth || MIN_WIDTH, index}
         return acc;
       }, []);
+
+      if (treeBy && !colDefsRef.current.find(col => col.tree)) {
+        const first = colDefsRef.current.find(col => col.index === 0);
+
+        if (first) {
+          first.tree = true;
+        }
+      }
     }
-  }, [tableRef.current?.clientWidth]);
+  }, [tableRef.current?.clientWidth, update]);
 
   const containerHeight = visibleRows.length * rowHeight;
 
@@ -161,12 +203,12 @@ const Table: React.FC<TableProps> = (
         : <TableRow
           key={row.id}
           row={row}
-          selectRow={selectRow}
-          selected={selected}
           rowHeight={rowHeight}
           offset={offset}
           index={index}
-          colDefsRef={colDefsRef}/>
+          colDefsRef={colDefsRef}
+          treeBy={treeBy}
+          api={apiRef}/>
     ));
   }, [virtualRows, offset, edge, selected]);
 

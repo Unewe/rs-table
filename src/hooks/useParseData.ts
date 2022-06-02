@@ -15,7 +15,7 @@ const useParseData = (
   tree?: string): [Array<Row>, Array<Row>, Record<string, Array<Row>>] => {
   return useMemo(() => {
     if (group && tree) {
-      console.warn("Select only 1 option, Group or Tree!")
+      console.warn("Select only 1 option, Group or Tree!");
     }
 
     if (group) {
@@ -42,6 +42,28 @@ const useParseData = (
       });
 
       return [visible.flat(), all.flat(), grouped];
+    } else if (tree) {
+      const visible: Array<Row> = [];
+      const all: Array<Row> = [];
+
+      const unfold = (rows: Array<Row>, level: number = 0, show: boolean = true) => {
+        rows.forEach(row => {
+          const item = {...row, "_level": level};
+
+          if (show) {
+            visible.push(item);
+          }
+
+          all.push(item);
+          const children = row[tree];
+          if (Array.isArray(children)) {
+            unfold(children, level + 1, Boolean(show && expanded[row.id]));
+          }
+        });
+      };
+      unfold(data);
+
+      return [visible, all, {}];
     }
 
     return [data, data, {}];
