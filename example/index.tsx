@@ -63,13 +63,13 @@ const colDefs: Array<ColumnDefinition> = [
 const App = () => {
   const [rows, setRows] = useState(mockData);
 
-  // useEffect(() => {
-  //   setInterval(() => setRows(rows => [...rows]), 1000);
-  // }, [])
+  useEffect(() => {
+    // setInterval(() => setRows(rows => [...rows]), 1000);
+  }, []);
 
   return (
     <div>
-      <div style={{height: "400px", position: "relative"}}>
+      <div style={{height: "400px", position: "relative", boxSizing: "border-box", overflowX: "hidden"}}>
         <Table data={rows} colDefs={colDefs} treeBy={"children"}/>
       </div>
     </div>

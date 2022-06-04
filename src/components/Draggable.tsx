@@ -14,7 +14,7 @@ const Draggable: React.FC<PropsWithChildren<{ onDrag: (e: MouseEvent) => void, d
       {React.Children.map(children, child => React.isValidElement(child)
         ? React.cloneElement(child, {
           "aria-details": "draggable",
-          onMouseDown: (event: MouseEvent) => onMouseDown(event, onDrag, dragId),
+          onPointerDownCapture: (event: MouseEvent) => onMouseDown(event, onDrag, dragId),
         })
         : null)}
     </>

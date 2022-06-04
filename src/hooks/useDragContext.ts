@@ -17,13 +17,12 @@ class DragContext {
 
     const xChanged = Math.abs(position.x - this.initialPosition.x) > 20;
     const yChanged = Math.abs(position.y - this.initialPosition.y) > 20;
-
     // StartDragEvent.
     if (xChanged || yChanged) {
       // Prevent click then Drag!
-      document.addEventListener("click", this.stopPropagation, true);
-      document.removeEventListener("mousemove", this.initiator, true);
-      document.addEventListener("mousemove", this.onMouseMove, true);
+      document.addEventListener("pointerup", this.stopPropagation, true);
+      document.removeEventListener("pointermove", this.initiator, true);
+      document.addEventListener("pointermove", this.onMouseMove, true);
 
       const dragElementRef = cachedCellRefs[this.cacheName];
       if (dragElementRef?.current) {
@@ -36,8 +35,8 @@ class DragContext {
     this.initialPosition = {x: event.clientX || event.pageX, y: event.clientY || event.pageY};
     this.onDrag = onDrag;
     this.cacheName = cacheName;
-    document.addEventListener("mousemove", this.initiator, true);
-    document.addEventListener("mouseup", this.onMouseUp, true);
+    document.addEventListener("pointermove", this.initiator, true);
+    document.addEventListener("pointerup", this.onMouseUp, true);
   }
 
   onMouseUp: MouseListener = () => {
@@ -55,11 +54,11 @@ class DragContext {
   clear: () => void = () => {
     this.onDrag = undefined;
     this.initialPosition = undefined;
-    document.removeEventListener("mousemove", this.initiator, true);
-    document.removeEventListener("mousemove", this.onMouseMove, true);
-    document.removeEventListener("mouseup", this.onMouseUp, true);
+    document.removeEventListener("pointermove", this.initiator, true);
+    document.removeEventListener("pointermove", this.onMouseMove, true);
+    document.removeEventListener("pointerup", this.onMouseUp, true);
     // Allow click!
-    setTimeout(() => document.removeEventListener("click", this.stopPropagation, true));
+    setTimeout(() => document.removeEventListener("pointerup", this.stopPropagation));
 
     const dragElementRef = cachedCellRefs[this.cacheName];
     if (dragElementRef?.current) {
