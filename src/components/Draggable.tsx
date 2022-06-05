@@ -1,11 +1,20 @@
 import React, {PropsWithChildren} from "react";
 import {useDragContext} from "../hooks/useDragContext";
 
-const Draggable: React.FC<PropsWithChildren<{ onDrag: (e: MouseEvent) => void, dragId?: string }>> = (
+type DraggableProps = {
+  onDrag: (e: PointerEvent) => void,
+  onDrop?: (e: PointerEvent) => void,
+  dragId?: string,
+  immediate?: boolean
+}
+
+const Draggable: React.FC<PropsWithChildren<DraggableProps>> = (
   {
     children,
     onDrag,
+    onDrop,
     dragId,
+    immediate
   }): React.ReactElement => {
   const [onMouseDown] = useDragContext();
 
@@ -14,7 +23,7 @@ const Draggable: React.FC<PropsWithChildren<{ onDrag: (e: MouseEvent) => void, d
       {React.Children.map(children, child => React.isValidElement(child)
         ? React.cloneElement(child, {
           "aria-details": "draggable",
-          onPointerDownCapture: (event: MouseEvent) => onMouseDown(event, onDrag, dragId),
+          onPointerDownCapture: (event: PointerEvent) => onMouseDown(event, onDrag, onDrop, dragId, immediate),
         })
         : null)}
     </>

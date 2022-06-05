@@ -5,9 +5,16 @@
   -ms-user-select: none;
 }
 
+/* Hide scrollbar for Chrome, Safari and Opera */
+.rs-table-wrapper::-webkit-scrollbar {
+  display: none;
+}
+
 .rs-table-wrapper {
   overflow: scroll;
   position: relative;
+  -ms-overflow-style: none;  /* IE and Edge */
+  scrollbar-width: none;  /* Firefox */
 
   .rs-selected {
     .rs-table-cell {
@@ -18,15 +25,6 @@
   .rs-table-row {
     position: absolute;
     width: 100%;
-  }
-}
-
-.rs-header-cell {
-  background-color: darkgrey;
-  color: white;
-
-  &:not([aria-colindex="0"]) {
-    border-left: 1px solid white;
   }
 }
 
@@ -54,6 +52,15 @@
 
 .rs-header-wrapper {
   touch-action: none;
+
+  .rs-header-cell {
+    background-color: darkgrey;
+    color: white;
+
+    &:not([aria-colindex="0"]) {
+      border-left: 1px solid white;
+    }
+  }
 }
 
 .rs-chevron {
@@ -63,4 +70,31 @@
 
 .rs-bottom {
   transform: rotate(90deg);
+}
+
+.rs-wrapper:hover .rs-scrollbar-vertical {
+  opacity: 1;
+}
+
+.rs-scrollbar-vertical {
+  opacity: 0;
+  touch-action: none;
+  position: absolute;
+  right: 0;
+  width: 10px;
+  background-color: whitesmoke;
+
+  .rs-active {
+    opacity: 1;
+  }
+
+  .rs-scrollbar-thumb {
+    touch-action: none;
+    position: absolute;
+    right: 1px;
+    width: 8px;
+    height: 30px;
+    border-radius: 4px;
+    background-color: darkgray;
+  }
 }

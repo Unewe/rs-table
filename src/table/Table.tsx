@@ -6,6 +6,7 @@ import Draggable from "../components/Draggable";
 import TableRow from "../components/TableRow";
 import HeaderCell from "../components/HeaderCell";
 import GroupRow from "../components/GroupRow";
+import {scrollBlocker, VerticalScrollbar, verticalScrollBarRef} from "../components/Scrollbar";
 
 export type TableApi = {
   selectRow: (id: string | number) => void;
@@ -171,6 +172,11 @@ const Table: React.FC<TableProps> = (
   const onScroll = () => {
     const tmp = Math.round(tableRef.current!.scrollTop / rowHeight);
     const nexOffset = Math.round(tmp - capacity / 3);
+    const scrollThumbStyle = verticalScrollBarRef.current?.style;
+
+    if (scrollThumbStyle && !scrollBlocker) {
+      scrollThumbStyle.top = `${tableRef.current!.scrollTop / (tableRef.current!.scrollHeight) * (tableRef.current!.clientHeight - 30)}px`;
+    }
 
     if (tmp >= offset + capacity * 0.63) {
       setOffset(nexOffset < 0 ? 0 : nexOffset);
@@ -226,12 +232,13 @@ const Table: React.FC<TableProps> = (
     <div style={{height: "100%"}} className={"rs-wrapper"}>
       {tableHeaders}
       <div ref={tableRef} className={"rs-table-wrapper"}
-           style={{maxHeight: "100%", maxWidth: "100%", width: "100%"}}
-           onScroll={onScroll}>
+           style={{maxHeight: `calc(100% - ${headerHeight}px)`, maxWidth: "100%", width: "100%"}}
+           onScrollCapture={onScroll}>
         <div className={"rs-table-container"} style={{height: containerHeight + "px"}}>
           {tableRows}
         </div>
       </div>
+      <VerticalScrollbar headerHeight={headerHeight} containerRef={tableRef} />
     </div>
   );
 };
