@@ -210,9 +210,9 @@ const Table: React.FC<TableProps> = (
     }
 
     if (tmp >= offset + capacity * 0.63) {
-      setOffset(nexOffset);
+      setOffset(nexOffset < 0 ? 0 : nexOffset);
     } else if (offset && tmp <= offset + capacity * 0.1) {
-      setOffset(nexOffset);
+      setOffset(nexOffset < 0 ? 0 : nexOffset);
     } else if (tmp === 0) {
       setOffset(0);
     }
