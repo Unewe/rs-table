@@ -1,7 +1,7 @@
 import React, {useCallback, useEffect, useMemo, useRef, useState} from "react";
 import "../style/index.scss";
 import useParseData from "../hooks/useParseData";
-import {updateDefsPosition} from "../utils/cellPositionUtiles";
+import {updateDefsPosition} from "../utils/positionUtiles";
 import Draggable from "../components/Draggable";
 import TableRow from "../components/TableRow";
 import HeaderCell from "../components/HeaderCell";
@@ -75,6 +75,7 @@ const Table: React.FC<TableProps> = (
   const [update, forceUpdate] = useState(false);
   const [expanded, setExpanded] = useState<Record<string | number, boolean>>({});
   const [selected, setSelected] = useState<Record<string | number, boolean>>({});
+  const wrapperRef = useRef<HTMLDivElement | null>(null);
   const tableRef = useRef<HTMLDivElement | null>(null);
   const [offset, setOffset] = useState(0);
   const [capacity, setCapacity] = useState(0);
@@ -150,6 +151,28 @@ const Table: React.FC<TableProps> = (
     }
   }, [tableRef.current?.clientHeight]);
 
+  // Catch scrollEvent.
+  useEffect(() => {
+    const listener = (event: Event) => {
+      event.preventDefault();
+      tableRef.current?.scrollTo({top: (tableRef.current?.scrollTop ?? 0) + (event as WheelEvent).deltaY});
+    }
+
+    if (wrapperRef.current) {
+      wrapperRef.current?.addEventListener("DOMMouseScroll", listener, true);
+      wrapperRef.current?.addEventListener("mousewheel", listener, {capture: true, passive: false});
+      wrapperRef.current?.addEventListener("touchmove", listener, {capture: true, passive: false});
+      wrapperRef.current?.addEventListener("keydown", listener, true);
+    }
+
+    return () => {
+      wrapperRef.current?.removeEventListener("DOMMouseScroll", listener, true);
+      wrapperRef.current?.removeEventListener("mousewheel", listener, true);
+      wrapperRef.current?.removeEventListener("touchmove", listener, true);
+      wrapperRef.current?.removeEventListener("keydown", listener, true);
+    };
+  }, [wrapperRef.current, update]);
+
   useEffect(() => {
     if (tableRef.current) {
       const withWidth = colDefs.filter(value => value.width);
@@ -187,9 +210,9 @@ const Table: React.FC<TableProps> = (
     }
 
     if (tmp >= offset + capacity * 0.63) {
-      setOffset(nexOffset < 0 ? 0 : nexOffset);
+      setOffset(nexOffset);
     } else if (offset && tmp <= offset + capacity * 0.1) {
-      setOffset(nexOffset < 0 ? 0 : nexOffset);
+      setOffset(nexOffset);
     } else if (tmp === 0) {
       setOffset(0);
     }
@@ -238,7 +261,7 @@ const Table: React.FC<TableProps> = (
   ), [colDefsRef.current, virtualRows]);
 
   return (
-    <div style={{height: "100%"}} className={"rs-wrapper"}>
+    <div style={{height: "100%"}} className={"rs-wrapper"} ref={wrapperRef}>
       {tableHeaders}
       <div ref={tableRef} className={"rs-table-wrapper"}
            style={{maxHeight: `calc(100% - ${headerHeight}px)`, maxWidth: "100%", width: "100%"}}

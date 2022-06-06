@@ -1,5 +1,5 @@
 import {cachedCellRefs} from "../utils/cellCacheUtils";
-import {getEventPosition} from "../utils/cellPositionUtiles";
+import {getEventPosition} from "../utils/positionUtiles";
 
 export type Position = Record<"x" | "y", number>;
 export type PointerListenerWithDirection = (event: PointerEvent, movement: Position) => void;
