@@ -7,6 +7,7 @@ import TableRow from "../components/TableRow";
 import HeaderCell from "../components/HeaderCell";
 import GroupRow from "../components/GroupRow";
 import {scrollBlocker, VerticalScrollbar, verticalScrollBarRef} from "../components/Scrollbar";
+import {Position} from "../hooks/useDragContext";
 
 export type TableApi = {
   selectRow: (id: string | number) => void;
@@ -94,7 +95,16 @@ const Table: React.FC<TableProps> = (
   }, [capacity, offset]);
 
   const [visibleRows] = useParseData(data, expanded, groupBy, treeBy);
-  const virtualRows = useMemo(() => virtualization ? visibleRows.slice(offset, edge) : visibleRows, [visibleRows, offset, edge]);
+  const containerHeight = visibleRows.length * rowHeight;
+  let verticalThumbHeight = (tableRef.current?.clientHeight ?? 0) * (tableRef.current?.clientHeight ?? 0) / containerHeight;
+
+  if (verticalThumbHeight < 20) {
+    verticalThumbHeight = 20;
+  }
+
+  const virtualRows = useMemo(() => virtualization
+    ? visibleRows.slice(offset, edge)
+    : visibleRows, [visibleRows, offset, edge]);
 
   const selectRow = useCallback((id: number | string) => {
     setSelected((selected) => {
@@ -167,15 +177,13 @@ const Table: React.FC<TableProps> = (
     }
   }, [tableRef.current?.clientWidth, update]);
 
-  const containerHeight = visibleRows.length * rowHeight;
-
   const onScroll = () => {
     const tmp = Math.round(tableRef.current!.scrollTop / rowHeight);
     const nexOffset = Math.round(tmp - capacity / 3);
     const scrollThumbStyle = verticalScrollBarRef.current?.style;
 
     if (scrollThumbStyle && !scrollBlocker) {
-      scrollThumbStyle.top = `${tableRef.current!.scrollTop / (tableRef.current!.scrollHeight) * (tableRef.current!.clientHeight - 30)}px`;
+      scrollThumbStyle.top = `${(tableRef.current!.scrollTop / (tableRef.current!.scrollHeight - tableRef.current!.clientHeight) * (tableRef.current!.clientHeight - verticalThumbHeight))}px`;
     }
 
     if (tmp >= offset + capacity * 0.63) {
@@ -187,8 +195,8 @@ const Table: React.FC<TableProps> = (
     }
   };
 
-  const handleDrag = useCallback((event: MouseEvent, colDef: RequiredDefinition, rows: Array<Row>): void => {
-    const newColRefs = updateDefsPosition(event, tableRef, colDef, colDefsRef, rows);
+  const handleDrag = useCallback((event: MouseEvent, movement: Position, colDef: RequiredDefinition, rows: Array<Row>): void => {
+    const newColRefs = updateDefsPosition(event, movement, tableRef, colDef, colDefsRef, rows);
 
     if (newColRefs) {
       colDefsRef.current = newColRefs;
@@ -221,7 +229,8 @@ const Table: React.FC<TableProps> = (
   const tableHeaders = useMemo(() => (
     <div className={"rs-header-wrapper"} style={{height: headerHeight + "px"}}>
       {colDefsRef.current.map(col => (
-        <Draggable key={col.key} dragId={`header_${col.key}`} onDrag={(event) => handleDrag(event, col, virtualRows)}>
+        <Draggable key={col.key} dragId={`header_${col.key}`}
+                   onDrag={(event, movement) => handleDrag(event, movement, col, virtualRows)}>
           <HeaderCell col={col} headerHeight={headerHeight}/>
         </Draggable>
       ))}
@@ -238,7 +247,7 @@ const Table: React.FC<TableProps> = (
           {tableRows}
         </div>
       </div>
-      <VerticalScrollbar headerHeight={headerHeight} containerRef={tableRef} />
+      <VerticalScrollbar headerHeight={headerHeight} containerRef={tableRef} thumbHeight={verticalThumbHeight}/>
     </div>
   );
 };

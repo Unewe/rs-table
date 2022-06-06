@@ -32,7 +32,7 @@ const getSimpleData = (count: number = 10000) => {
   }
 };
 
-getSimpleData(100000);
+getSimpleData(10000);
 
 // const getTreeData = (arr: Array<ExampleObj>, nesting: number = 1): Array<ExampleObj> => {
 //   arr.forEach((value) => {

@@ -3,6 +3,7 @@
   -moz-user-select: none;
   -webkit-user-select: none;
   -ms-user-select: none;
+  position: relative;
 }
 
 /* Hide scrollbar for Chrome, Safari and Opera */
@@ -13,8 +14,8 @@
 .rs-table-wrapper {
   overflow: scroll;
   position: relative;
-  -ms-overflow-style: none;  /* IE and Edge */
-  scrollbar-width: none;  /* Firefox */
+  -ms-overflow-style: none; /* IE and Edge */
+  scrollbar-width: none; /* Firefox */
 
   .rs-selected {
     .rs-table-cell {
@@ -84,7 +85,7 @@
   width: 10px;
   background-color: whitesmoke;
 
-  .rs-active {
+  &.rs-active {
     opacity: 1;
   }
 
@@ -93,7 +94,6 @@
     position: absolute;
     right: 1px;
     width: 8px;
-    height: 30px;
     border-radius: 4px;
     background-color: darkgray;
   }

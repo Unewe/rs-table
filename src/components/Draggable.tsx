@@ -1,9 +1,9 @@
 import React, {PropsWithChildren} from "react";
-import {useDragContext} from "../hooks/useDragContext";
+import {PointerListener, PointerListenerWithDirection, useDragContext} from "../hooks/useDragContext";
 
 type DraggableProps = {
-  onDrag: (e: PointerEvent) => void,
-  onDrop?: (e: PointerEvent) => void,
+  onDrag: PointerListenerWithDirection,
+  onDrop?: PointerListener,
   dragId?: string,
   immediate?: boolean
 }
