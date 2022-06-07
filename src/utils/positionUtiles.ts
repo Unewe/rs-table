@@ -87,6 +87,39 @@ export const updateDefsPosition = (
   return undefined;
 }
 
-export const getEventPosition = (event: PointerEvent | React.PointerEvent<HTMLDivElement>): Position => {
+export const getEventPosition = (event: PointerEvent | React.PointerEvent<HTMLDivElement> | Touch): Position => {
   return {x: event.clientX || event.pageX, y: event.clientY || event.pageY};
+}
+
+const wheelEvent = 'onwheel' in document.createElement('div') ? 'wheel' : 'mousewheel';
+/**
+ * Catch scrollEvents and redirect to another Element.
+ * TODO touch event!
+ * @param wrapperRef
+ * @param tableRef
+ * @param scrollSpeed like native = 1.
+ */
+export const handleScrollActions = (
+  wrapperRef: React.RefObject<HTMLDivElement>,
+  tableRef: React.RefObject<HTMLDivElement>,
+  scrollSpeed: number) => {
+  const listener = (event: Event) => {
+    event.preventDefault();
+    const deltaY = (event as WheelEvent).deltaY;
+    tableRef.current?.scrollTo({top: (tableRef.current?.scrollTop ?? 0) + deltaY * scrollSpeed});
+  };
+
+  if (wrapperRef.current) {
+    wrapperRef.current?.addEventListener("DOMMouseScroll", listener, true);
+    wrapperRef.current?.addEventListener(wheelEvent, listener, {capture: true, passive: false});
+    wrapperRef.current?.addEventListener("touchmove", listener, {capture: true, passive: false});
+    wrapperRef.current?.addEventListener("keydown", listener, true);
+  }
+
+  return () => {
+    wrapperRef.current?.removeEventListener("DOMMouseScroll", listener, true);
+    wrapperRef.current?.removeEventListener(wheelEvent, listener, true);
+    wrapperRef.current?.removeEventListener("touchmove", listener, true);
+    wrapperRef.current?.removeEventListener("keydown", listener, true);
+  };
 }

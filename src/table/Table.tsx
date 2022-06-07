@@ -1,7 +1,7 @@
 import React, {useCallback, useEffect, useMemo, useRef, useState} from "react";
 import "../style/index.scss";
 import useParseData from "../hooks/useParseData";
-import {updateDefsPosition} from "../utils/positionUtiles";
+import {handleScrollActions, updateDefsPosition} from "../utils/positionUtiles";
 import Draggable from "../components/Draggable";
 import TableRow from "../components/TableRow";
 import HeaderCell from "../components/HeaderCell";
@@ -55,6 +55,7 @@ type TableProps = {
   groupBy?: string;
   treeBy?: string;
   virtualization?: boolean;
+  scrollSpeed?: number;
 }
 
 const DEFAULT_ROW_HEIGHT = 40;
@@ -70,6 +71,7 @@ const Table: React.FC<TableProps> = (
     groupBy,
     treeBy,
     virtualization = true,
+    scrollSpeed = 1,
   }
 ): React.ReactElement => {
   const [update, forceUpdate] = useState(false);
@@ -152,26 +154,7 @@ const Table: React.FC<TableProps> = (
   }, [tableRef.current?.clientHeight]);
 
   // Catch scrollEvent.
-  useEffect(() => {
-    const listener = (event: Event) => {
-      event.preventDefault();
-      tableRef.current?.scrollTo({top: (tableRef.current?.scrollTop ?? 0) + (event as WheelEvent).deltaY});
-    }
-
-    if (wrapperRef.current) {
-      wrapperRef.current?.addEventListener("DOMMouseScroll", listener, true);
-      wrapperRef.current?.addEventListener("mousewheel", listener, {capture: true, passive: false});
-      wrapperRef.current?.addEventListener("touchmove", listener, {capture: true, passive: false});
-      wrapperRef.current?.addEventListener("keydown", listener, true);
-    }
-
-    return () => {
-      wrapperRef.current?.removeEventListener("DOMMouseScroll", listener, true);
-      wrapperRef.current?.removeEventListener("mousewheel", listener, true);
-      wrapperRef.current?.removeEventListener("touchmove", listener, true);
-      wrapperRef.current?.removeEventListener("keydown", listener, true);
-    };
-  }, [wrapperRef.current, update]);
+  useEffect(() => handleScrollActions(wrapperRef, tableRef, scrollSpeed), [wrapperRef.current, update]);
 
   useEffect(() => {
     if (tableRef.current) {
