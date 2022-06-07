@@ -45,7 +45,7 @@ export type Row = Record<"id", string | number> & Record<string, unknown>;
 type TableProps = {
   data: Array<Row>;
   colDefs: Array<ColumnDefinition>;
-  onSelect: (values: Array<Row>) => void;
+  onSelect?: (values: Array<Row>) => void;
   rowHeight?: number;
   headerHeight?: number;
   onDragEnd?: () => {};

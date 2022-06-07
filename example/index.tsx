@@ -70,7 +70,7 @@ const App = () => {
   return (
     <div>
       <div style={{height: "400px", position: "relative", boxSizing: "border-box", overflowX: "hidden"}}>
-        <Table data={rows} colDefs={colDefs} treeBy={"children"}/>
+        <Table data={rows} colDefs={colDefs} treeBy={"children"} />
       </div>
     </div>
   );
