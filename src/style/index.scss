@@ -73,6 +73,10 @@
   transform: rotate(90deg);
 }
 
+.rs-top {
+  transform: rotate(-90deg);
+}
+
 .rs-wrapper:hover .rs-scrollbar-vertical {
   opacity: 1;
 }

@@ -1,4 +1,4 @@
-import {Row} from "../table/Table";
+import {Row, Sort} from "../table/Table";
 import {useMemo} from "react";
 
 const groupBy = (rows: Array<Row>, groupBy: keyof Row): Record<string, Array<Row>> => {
@@ -8,11 +8,33 @@ const groupBy = (rows: Array<Row>, groupBy: keyof Row): Record<string, Array<Row
   }, {});
 }
 
+const sortRows = (rows: Array<Row>, sort?: Sort) => {
+  if (!sort) return rows;
+
+  return rows.sort((a, b) => {
+    let result: number;
+    if (sort.function) {
+      result = sort.function(a, b);
+    } else {
+      // @ts-ignore comparing unknown types.
+      result = a[sort.key] > b[sort.key] ? 1 : -1;
+    }
+
+    if (sort.direction === "desc") {
+      result = result * -1;
+    }
+
+    return result;
+  });
+}
+
 const useParseData = (
   data: Array<Row>,
   expanded: Record<string | number, boolean>,
   group?: string,
-  tree?: string): [Array<Row>, Array<Row>, Record<string, Array<Row>>] => {
+  tree?: string,
+  sort?: Sort
+): [Array<Row>, Array<Row>, Record<string, Array<Row>>] => {
   return useMemo(() => {
     if (group && tree) {
       console.warn("Select only 1 option, Group or Tree!");
@@ -33,11 +55,11 @@ const useParseData = (
         };
 
         all.push(groupRow);
-        all.push(...grouped[key]);
+        all.push(...sortRows([...grouped[key]], sort));
 
         visible.push(groupRow);
         if (expanded[key]) {
-          visible.push(...grouped[key]);
+          visible.push(...sortRows([...grouped[key]], sort));
         }
       });
 
@@ -57,17 +79,17 @@ const useParseData = (
           all.push(item);
           const children = row[tree];
           if (Array.isArray(children)) {
-            unfold(children, level + 1, Boolean(show && expanded[row.id]));
+            unfold(sortRows([...children], sort), level + 1, Boolean(show && expanded[row.id]));
           }
         });
       };
-      unfold(data);
-
+      unfold(sortRows([...data], sort));
       return [visible, all, {}];
     }
 
-    return [data, data, {}];
-  }, [data, expanded, group, tree]);
+    const tmp = sortRows([...data], sort);
+    return [tmp, tmp, {}];
+  }, [data, expanded, group, tree, sort]);
 }
 
 export default useParseData;

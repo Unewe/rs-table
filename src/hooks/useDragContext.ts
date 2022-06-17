@@ -19,6 +19,7 @@ class DragContext {
   private onDrag: PointerListenerWithDirection | undefined;
   private onDrop: PointerListener | undefined;
   private immediate: boolean = false;
+  private isDragging = false;
 
   initiator: PointerListener = (event) => {
     const position = getEventPosition(event);
@@ -31,8 +32,8 @@ class DragContext {
     const yChanged = Math.abs(position.y - this.initialPosition.y) > 20;
     // StartDragEvent.
     if (this.immediate || xChanged || yChanged) {
+      this.isDragging = true;
       // Prevent click then Drag!
-      document.addEventListener("pointerup", this.stopPropagation, true);
       document.removeEventListener("pointermove", this.initiator, true);
       document.addEventListener("pointermove", this.onMouseMove, true);
 
@@ -56,7 +57,9 @@ class DragContext {
   }
 
   onMouseUp: PointerListener = (event) => {
-    event.stopPropagation();
+    if (this.isDragging) {
+      event.stopPropagation();
+    }
     this.onDrop && this.onDrop(event);
     this.clear();
   }
@@ -76,11 +79,10 @@ class DragContext {
     this.onDrag = undefined;
     this.onDrop = undefined;
     this.initialPosition = undefined;
+    this.isDragging = false;
     document.removeEventListener("pointermove", this.initiator, true);
     document.removeEventListener("pointermove", this.onMouseMove, true);
     document.removeEventListener("pointerup", this.onMouseUp, true);
-    // Allow click!
-    setTimeout(() => document.removeEventListener("pointerup", this.stopPropagation));
 
     const dragElementRef = cachedCellRefs[this.cacheName];
     if (dragElementRef?.current) {

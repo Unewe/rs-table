@@ -9,6 +9,12 @@ import GroupRow from "../components/GroupRow";
 import {scrollBlocker, VerticalScrollbar, verticalScrollBarRef} from "../components/Scrollbar";
 import {Position} from "../hooks/useDragContext";
 
+export type Sort = {
+  key: string;
+  direction: "asc" | "desc";
+  function?: (a: Row, b: Row) => number;
+}
+
 export type TableApi = {
   selectRow: (id: string | number) => void;
   expandRow: (id: string | number) => void;
@@ -24,7 +30,7 @@ type Definition = {
   sortable?: boolean;
   draggable?: boolean;
   fixed?: "left" | "right";
-  sort?: "asc" | "desc";
+  sort?: (a: Row, b: Row) => number;
   tree?: boolean;
   renderer?: (value: Row, api: React.RefObject<TableApi>) => React.ReactElement;
   headerRenderer?: () => React.ReactElement;
@@ -77,6 +83,7 @@ const Table: React.FC<TableProps> = (
   const [update, forceUpdate] = useState(false);
   const [expanded, setExpanded] = useState<Record<string | number, boolean>>({});
   const [selected, setSelected] = useState<Record<string | number, boolean>>({});
+  const [sort, setSort] = useState<Sort | undefined>();
   const wrapperRef = useRef<HTMLDivElement | null>(null);
   const tableRef = useRef<HTMLDivElement | null>(null);
   const [offset, setOffset] = useState(0);
@@ -97,7 +104,7 @@ const Table: React.FC<TableProps> = (
     return capacity + offset;
   }, [capacity, offset]);
 
-  const [visibleRows] = useParseData(data, expanded, groupBy, treeBy);
+  const [visibleRows] = useParseData(data, expanded, groupBy, treeBy, sort);
   const containerHeight = visibleRows.length * rowHeight;
   let verticalThumbHeight = (tableRef.current?.clientHeight ?? 0) * (tableRef.current?.clientHeight ?? 0) / containerHeight;
 
@@ -237,7 +244,7 @@ const Table: React.FC<TableProps> = (
       {colDefsRef.current.map(col => (
         <Draggable key={col.key} dragId={`header_${col.key}`}
                    onDrag={(event, movement) => handleDrag(event, movement, col, virtualRows)}>
-          <HeaderCell col={col} headerHeight={headerHeight}/>
+          <HeaderCell col={col} headerHeight={headerHeight} sort={sort} setSort={setSort}/>
         </Draggable>
       ))}
     </div>
