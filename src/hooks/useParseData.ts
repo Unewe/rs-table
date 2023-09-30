@@ -1,76 +1,109 @@
-import {Row, Sort} from "../table/Table";
-import {useMemo} from "react";
+import { useMemo } from "react";
+import { TechRow, Row, Sort, ParsedData, Filter } from "../components";
 
-const groupBy = (rows: Array<Row>, groupBy: keyof Row): Record<string, Array<Row>> => {
-  return rows.reduce((acc: Record<string, Array<Row>>, value) => {
-    acc[value[groupBy] as string] = acc[value[groupBy] as string] ? [...acc[value[groupBy] as string], value] : [value];
+/**
+ * Группировка строк по названию свойства.
+ * @param rows строки.
+ * @param groupBy свойство для группировки.
+ */
+const groupBy = <T>(rows: Array<T>, groupBy: keyof T): Record<string, Array<T>> => {
+  return rows.reduce((acc: Record<string, Array<T>>, value) => {
+    acc[value[groupBy] as any] = acc[value[groupBy] as any] ? [...acc[value[groupBy] as any], value] : [value];
     return acc;
   }, {});
-}
+};
 
-const sortRows = (rows: Array<Row>, sort?: Sort) => {
-  if (!sort) return rows;
+/**
+ * Сортировка строк.
+ * @param rows строки.
+ * @param sort сортировка.
+ * @param filter фильтрация.
+ */
+const prepareRows = <T>(rows: Array<T>, sort?: Sort<T>, filter?: Filter<T>): Array<T> => {
+  let tmp = rows;
 
-  return rows.sort((a, b) => {
-    let result: number;
-    if (sort.function) {
-      result = sort.function(a, b);
-    } else {
-      // @ts-ignore comparing unknown types.
-      result = a[sort.key] > b[sort.key] ? 1 : -1;
-    }
+  if (sort) {
+    tmp = tmp.sort((a, b) => {
+      let result: number;
+      if (sort.function) {
+        result = sort.function(a, b);
+      } else {
+        result = a[sort.key] > b[sort.key] ? 1 : -1;
+      }
 
-    if (sort.direction === "desc") {
-      result = result * -1;
-    }
+      if (sort.direction === "desc") {
+        result = result * -1;
+      }
 
-    return result;
-  });
-}
+      return result;
+    });
+  }
 
-const useParseData = (
-  data: Array<Row>,
-  expanded: Record<string | number, boolean>,
-  group?: string,
-  tree?: string,
-  sort?: Sort
-): [Array<Row>, Array<Row>, Record<string, Array<Row>>] => {
+  if (filter) {
+    tmp = tmp.filter(value => filter.predicate(value[filter.key]));
+  }
+
+  return tmp;
+};
+
+/**
+ * Подготовка данных к выводу в таблице.
+ * @param data данные.
+ * @param expanded данные по раскрытым элементам.
+ * @param group поле группировки.
+ * @param tree поле для построения дерева.
+ * @param sort сортировка.
+ * @param filter фильтрация.
+ *
+ * @return [видимые элементы, все элементы, группированные строки]
+ */
+function useParseData<T extends Row>(
+  data: Array<T>,
+  expanded: Record<Row["id"], boolean>,
+  group?: keyof T,
+  tree?: keyof T,
+  sort?: Sort<T>,
+  filter?: Filter<T>
+): ParsedData<T> {
   return useMemo(() => {
     if (group && tree) {
-      console.warn("Select only 1 option, Group or Tree!");
+      console.warn("Выберите только одну опцию group или tree.");
     }
+
+    let tmp: ParsedData<T> | undefined;
 
     if (group) {
       const grouped = groupBy(data, group);
 
-      const visible: Array<Row> = [];
-      const all: Array<Row> = [];
+      const visible: Array<T | TechRow<T>> = [];
+      const all: Array<T | TechRow<T>> = [];
 
       Object.keys(grouped).forEach(key => {
-        const groupRow: Row = {
-          type: "_GroupRow",
+        const groupRow: TechRow = {
+          $type: "_GroupRow",
+          $id: `Group:${key}`,
+          $count: grouped[key].length,
+          $name: key,
           id: `Group:${key}`,
-          count: grouped[key].length,
-          name: key
         };
 
         all.push(groupRow);
-        all.push(...sortRows([...grouped[key]], sort));
+        all.push(...prepareRows([...grouped[key]], sort, filter));
 
         visible.push(groupRow);
         if (expanded[key]) {
-          visible.push(...sortRows([...grouped[key]], sort));
+          visible.push(...prepareRows([...grouped[key]], sort, filter));
         }
       });
 
-      return [visible.flat(), all.flat(), grouped];
+      tmp = { visible, all, grouped, allSelected: {} };
     } else if (tree) {
-      const visible: Array<Row> = [];
-      const all: Array<Row> = [];
+      const visible: Array<T> = [];
+      const all: Array<T> = [];
 
-      const unfold = (rows: Array<Row>, level: number = 0, show: boolean = true) => {
+      const unfold = (rows: Array<T>, level: number = 0, show: boolean = true): void => {
         rows.forEach(row => {
-          const item = {...row, "_level": level};
+          const item = { ...row, $level: level };
 
           if (show) {
             visible.push(item);
@@ -79,17 +112,25 @@ const useParseData = (
           all.push(item);
           const children = row[tree];
           if (Array.isArray(children)) {
-            unfold(sortRows([...children], sort), level + 1, Boolean(show && expanded[row.id]));
+            unfold(prepareRows([...children], sort, filter), level + 1, Boolean(show && expanded[row.id]));
           }
         });
       };
-      unfold(sortRows([...data], sort));
-      return [visible, all, {}];
+      unfold(prepareRows([...data], sort, filter));
+      tmp = { visible, all, allSelected: {}, grouped: {} };
+    } else {
+      const visible = prepareRows([...data], sort, filter);
+      tmp = { visible, all: visible, allSelected: {}, grouped: {} };
     }
 
-    const tmp = sortRows([...data], sort);
-    return [tmp, tmp, {}];
-  }, [data, expanded, group, tree, sort]);
+    // Формируем объект с выбранными значениями.
+    tmp.allSelected = tmp.all.reduce<Record<string | number, boolean>>((acc, value) => {
+      acc[value.id] = true;
+      return acc;
+    }, {});
+
+    return tmp;
+  }, [data, expanded, group, tree, sort, filter]);
 }
 
 export default useParseData;

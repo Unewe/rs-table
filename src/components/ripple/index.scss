@@ -1,0 +1,78 @@
+.rs-ripple-effect {
+  overflow: hidden;
+  pointer-events: none;
+  position: absolute;
+  z-index: 0;
+  inset: 0;
+  border-radius: inherit;
+
+  .rs-ripple {
+    position: absolute;
+    width: 200%;
+    height: 200%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+
+    &::before {
+      border-radius: 50%;
+      opacity: 0;
+      content: " ";
+      background-color: rgb(52 58 74);
+      animation: ripple 500ms ease-in-out forwards;
+      transition: opacity 500ms;
+    }
+  }
+
+  .rs-focus-ripple {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    left: 0;
+
+    &::before {
+      border-radius: 50%;
+      opacity: 0.2;
+      content: " ";
+      background-color: rgb(52 58 74);
+      animation: focus-ripple 700ms ease-in-out infinite;
+      transition: opacity 500ms;
+    }
+  }
+
+  &.rs-ripple-effect-active {
+    .rs-ripple:last-of-type {
+      &::before {
+        opacity: 0.2;
+      }
+    }
+  }
+}
+
+@keyframes ripple {
+  0% {
+    width: 0;
+    height: 0;
+  }
+
+  100% {
+    width: 100%;
+    height: 100%;
+  }
+}
+
+@keyframes focus-ripple {
+  0%,
+  100% {
+    width: 60%;
+    height: 60%;
+  }
+
+  50% {
+    width: 80%;
+    height: 80%;
+  }
+}

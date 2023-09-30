@@ -1,16 +1,19 @@
-import {cachedCellRefs} from "../utils/cellCacheUtils";
-import {getEventPosition} from "../utils/positionUtiles";
+import { cacheRef, getEventPosition } from "../utils";
+import { Position } from "../components";
 
-export type Position = Record<"x" | "y", number>;
 export type PointerListenerWithDirection = (event: PointerEvent, movement: Position) => void;
 export type PointerListener = (event: PointerEvent) => void;
+
 type DragEventInitiator = (
   event: PointerEvent,
   onDrag: PointerListenerWithDirection,
   onDrop?: PointerListener,
   cacheName?: string,
-  immediate?: boolean
+  immediate?: boolean,
+  cursor?: string
 ) => void;
+
+const stopPropagation = (event: MouseEvent): void => event.stopPropagation();
 
 class DragContext {
   private cacheName: string = "";
@@ -20,8 +23,10 @@ class DragContext {
   private onDrop: PointerListener | undefined;
   private immediate: boolean = false;
   private isDragging = false;
+  private cursor?: string;
+  private previousCursor?: string;
 
-  initiator: PointerListener = (event) => {
+  initiator: PointerListener = event => {
     const position = getEventPosition(event);
     if (!this.initialPosition) {
       this.clear();
@@ -30,23 +35,25 @@ class DragContext {
 
     const xChanged = Math.abs(position.x - this.initialPosition.x) > 20;
     const yChanged = Math.abs(position.y - this.initialPosition.y) > 20;
-    // StartDragEvent.
+    // Начало перетаскивания.
     if (this.immediate || xChanged || yChanged) {
       this.isDragging = true;
-      // Prevent click then Drag!
+      // Предотвращение клика, при перетаскивании!
       document.removeEventListener("pointermove", this.initiator, true);
       document.addEventListener("pointermove", this.onMouseMove, true);
+      document.addEventListener("click", stopPropagation, true);
 
       this.previousPosition = position;
-      const dragElementRef = cachedCellRefs[this.cacheName];
+      const dragElementRef = cacheRef.cells[this.cacheName];
       if (dragElementRef?.current) {
         dragElementRef.current.classList.add("rs-dragged");
       }
     }
-  }
+  };
 
-  onMouseDown: DragEventInitiator = (event, onDrag, onDrop, cacheName = "", immediate = false) => {
+  onMouseDown: DragEventInitiator = (event, onDrag, onDrop, cacheName = "", immediate = false, cursor = "") => {
     event.stopPropagation();
+    this.cursor = cursor;
     this.initialPosition = getEventPosition(event);
     this.onDrag = onDrag;
     this.onDrop = onDrop;
@@ -54,25 +61,27 @@ class DragContext {
     this.immediate = immediate;
     document.addEventListener("pointermove", this.initiator, true);
     document.addEventListener("pointerup", this.onMouseUp, true);
-  }
+    if (this.cursor) {
+      this.previousCursor = document.body.style.cursor;
+      document.body.style.cursor = this.cursor;
+    }
+  };
 
-  onMouseUp: PointerListener = (event) => {
+  onMouseUp: PointerListener = event => {
     if (this.isDragging) {
       event.stopPropagation();
     }
-    this.onDrop && this.onDrop(event);
+    this.onDrop?.(event);
     this.clear();
-  }
+  };
 
-  onMouseMove: PointerListener = (event) => {
+  onMouseMove: PointerListener = event => {
     const position = getEventPosition(event);
     if (this.onDrag && this.previousPosition) {
-      this.onDrag(event, {x: position.x - this.previousPosition.x, y: position.y - this.previousPosition.y});
+      this.onDrag(event, { x: position.x - this.previousPosition.x, y: position.y - this.previousPosition.y });
     }
     this.previousPosition = position;
-  }
-
-  stopPropagation: PointerListener = (event) => event.stopPropagation();
+  };
 
   clear: () => void = () => {
     this.previousPosition = undefined;
@@ -83,17 +92,30 @@ class DragContext {
     document.removeEventListener("pointermove", this.initiator, true);
     document.removeEventListener("pointermove", this.onMouseMove, true);
     document.removeEventListener("pointerup", this.onMouseUp, true);
+    setTimeout(() => {
+      document.removeEventListener("click", stopPropagation, true);
+    }, 0);
 
-    const dragElementRef = cachedCellRefs[this.cacheName];
+    const dragElementRef = cacheRef.cells[this.cacheName];
     if (dragElementRef?.current) {
       dragElementRef.current.classList.remove("rs-dragged");
     }
     this.cacheName = "";
-  }
+
+    if (this.cursor) {
+      if (this.previousCursor) {
+        document.body.style.cursor = this.previousCursor;
+      } else {
+        document.body.style.removeProperty("cursor");
+      }
+
+      this.cursor = undefined;
+    }
+  };
 }
 
 const context = new DragContext();
 
-export const useDragContext = () => {
+export const useDragContext = (): [DragEventInitiator] => {
   return [context.onMouseDown];
-}
+};

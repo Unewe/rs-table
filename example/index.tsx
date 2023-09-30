@@ -1,9 +1,10 @@
 import 'react-app-polyfill/ie11';
 import * as React from 'react';
 import * as ReactDOM from 'react-dom';
-import Table from "../src";
-import {ColumnDefinition} from "../src/table/Table";
-import {useEffect, useState} from "react";
+import "../dist/rs-table.cjs.development.css";
+import { Checkbox } from "../dist";
+import { ColumnDefinition, Table } from "../dist";
+import { defaultCheckboxColDef } from "../src/components/table/Renderers";
 
 type ExampleObj = {
   id: number | string;
@@ -16,11 +17,10 @@ type ExampleObj = {
   children?: Array<ExampleObj>;
 };
 
-let mockData: Array<ExampleObj> = [];
-
 const getSimpleData = (count: number = 10000) => {
+  const tmp: Array<ExampleObj> = [];
   for (let i = 0; i < count; i++) {
-    mockData.push({
+    tmp.push({
       id: i,
       name: `Value ${i}`,
       param: `Param ${i}`,
@@ -30,48 +30,47 @@ const getSimpleData = (count: number = 10000) => {
       group: `Group ${Math.random().toFixed(1)}`
     });
   }
+
+  return tmp;
 };
 
-getSimpleData(1000);
+const getTreeData = (arr: Array<ExampleObj>, nesting: number = 1): Array<ExampleObj> => {
+  arr.forEach((value) => {
+    if (nesting < 3) {
+      value.children = getTreeData([...arr].map((child, index) => ({
+        ...child,
+        name: `${value.name}__${index}`,
+        id: `${value.id}_${index}`,
+        children: undefined
+      })), nesting + 1);
+    }
+  });
 
-// const getTreeData = (arr: Array<ExampleObj>, nesting: number = 1): Array<ExampleObj> => {
-//   arr.forEach((value) => {
-//     if (nesting < 3) {
-//       value.children = getTreeData([...arr].map((child, index) => ({...child, name: `${value.name}__${index}`, id: `${value.id}_${index}`, children: undefined})), nesting + 1);
-//     }
-//   });
-//
-//   return arr;
-// }
-//
-// mockData = getTreeData(mockData);
+  return arr;
+};
 
-const colDefs: Array<ColumnDefinition> = [
-  {name: "id", key: "id"},
+const data: Array<ExampleObj> = getSimpleData(10000);
+// const treeData: Array<ExampleObj> = getTreeData(getSimpleData(15));
+
+const colDefs: Array<ColumnDefinition<ExampleObj>> = [
+  defaultCheckboxColDef,
   {
-    name: "name",
+    name: "Name",
     key: "name",
-    width: 100,
-    renderer: (value) => <div style={{color: "red"}}>{value.name as string}</div>
+    fixed: "right",
+    width: 100
   },
-  {name: "param", key: "param"},
-  {name: "age", key: "age"},
-  {name: "firstName", key: "firstName"},
-  {name: "lastName", key: "lastName"},
-]
+  { name: "Param", key: "param", renderer: (value) => <div style={{ color: "red" }}>{value.name as string}</div> },
+  { name: "Age", key: "age" },
+  { name: "FirstName", key: "firstName" },
+  { name: "LastName", key: "lastName" }
+];
 
 const App = () => {
-  const [rows, setRows] = useState(mockData);
-
-  useEffect(() => {
-    // setInterval(() => setRows(rows => [...rows]), 1000);
-  }, []);
-
   return (
     <div>
-      <div style={{height: "400px", position: "relative", boxSizing: "border-box", overflowX: "hidden"}}>
-        <Table data={rows} colDefs={colDefs} />
-      </div>
+      <Checkbox/>
+      <div style={{ height: "500px" }}><Table data={data} colDefs={colDefs}/></div>
     </div>
   );
 };
