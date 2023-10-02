@@ -11,7 +11,7 @@ import { getClassName } from "../../utils";
  * @param row строка.
  * @param api таблицы.
  */
-export const treeCellRenderer: CellRenderer<TechRow<Row & Record<string, unknown>>> = (col, row, api) => {
+export const treeCellRenderer: CellRenderer<TechRow<Row>> = (col, row, api) => {
   const children = row[api.current.treeBy!];
   const childrenSize = Array.isArray(children) ? children.length : 0;
 
@@ -95,7 +95,6 @@ export const defaultGroupRowRenderer = (
   );
 };
 
-// Any так как должен подходить для любых ColumnDefinitions
 export const defaultCheckboxColDef: any = {
   name: "",
   width: 44,
@@ -108,7 +107,6 @@ export const defaultCheckboxColDef: any = {
   resizable: false,
 };
 
-// Any так как должен подходить для любых ColumnDefinitions
 export const emptyColDef: any = {
   name: "",
   width: 40,
@@ -125,6 +123,6 @@ export const emptyColDef: any = {
  * @param col колонка.
  * @param row строка.
  */
-export const cellRenderer: CellRenderer<Row & Record<string, unknown>> = (col, row) => {
+export const cellRenderer: CellRenderer<Row> = (col, row) => {
   return <div className={"rs-cell-content"}>{row[col.key] as Primitive}</div>;
 };
