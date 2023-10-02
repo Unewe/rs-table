@@ -30,13 +30,10 @@ export interface TableProps<RowType extends Row> {
   data: Array<RowType>;
   colDefs: Array<ColumnDefinition<RowType>>;
   onSelect?: (selected: Record<RowType["id"], boolean>) => void;
-  onExpand?: () => {};
+  onExpand?: (expanded: Record<RowType["id"], boolean>) => void;
   selectionType?: "multiple" | "single";
   rowHeight?: number;
   headerHeight?: number;
-  onDragEnd?: () => {};
-  select?: () => {};
-  virtual?: boolean;
   groupBy?: keyof RowType;
   treeBy?: keyof RowType;
   virtualization?: boolean;

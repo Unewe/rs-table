@@ -28,6 +28,7 @@ function Table<T extends Row>(props: TableProps<T>): React.ReactElement {
     groupRowRenderer,
     onColDefChange,
     filterComponent,
+    onExpand,
   } = props;
   const [update, setUpdate] = useState(false);
   const [expanded, setExpanded] = useState<Record<Row["id"], boolean>>(state?.expanded ?? {});
@@ -71,6 +72,8 @@ function Table<T extends Row>(props: TableProps<T>): React.ReactElement {
   } = useParseData(data, expanded, groupBy, treeBy, sort, filter);
 
   useEffect(() => onSelect?.(selected), [selected]);
+  useEffect(() => onExpand?.(expanded), [expanded]);
+
   const selectRow = useCallback((id: Row["id"], value: boolean | undefined) => {
     setSelected(selected => {
       if (selectionType === "single") selected = {};
