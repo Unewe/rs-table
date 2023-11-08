@@ -76,13 +76,13 @@ function Table<T extends Row>(props: TableProps<T>): React.ReactElement {
 
   const selectRow = useCallback((id: Row["id"], value: boolean | undefined) => {
     setSelected(selected => {
-      if (selectionType === "single") selected = {};
+      const tmp = selectionType === "single" ? {} :{ ...selected };
+
       if ((value === undefined && !selected[id]) || (value === true && !selected[id])) {
-        selected[id] = true;
+        tmp[id] = true;
         selectedCounterRef.current++;
-        return { ...selected, [id]: true };
+        return tmp;
       } else if ((value === undefined && selected[id]) || (value === false && selected[id])) {
-        const tmp = { ...selected };
         delete tmp[id];
         selectedCounterRef.current--;
         return tmp;
@@ -99,7 +99,6 @@ function Table<T extends Row>(props: TableProps<T>): React.ReactElement {
         delete tmp[id];
         return tmp;
       } else {
-        expanded[id] = true;
         return { ...expanded, [id]: true };
       }
     });

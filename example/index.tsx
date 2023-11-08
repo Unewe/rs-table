@@ -2,7 +2,6 @@ import 'react-app-polyfill/ie11';
 import * as React from 'react';
 import * as ReactDOM from 'react-dom';
 import "../dist/rs-table.cjs.development.css";
-import { Checkbox } from "../dist";
 import { ColumnDefinition, Table } from "../dist";
 import { defaultCheckboxColDef } from "../src/components/table/Renderers";
 
@@ -49,15 +48,15 @@ const getTreeData = (arr: Array<ExampleObj>, nesting: number = 1): Array<Example
   return arr;
 };
 
-const data: Array<ExampleObj> = getSimpleData(10000);
-// const treeData: Array<ExampleObj> = getTreeData(getSimpleData(15));
+// const data: Array<ExampleObj> = getSimpleData(10000);
+const treeData: Array<ExampleObj> = getTreeData(getSimpleData(15));
 
 const colDefs: Array<ColumnDefinition<ExampleObj>> = [
   defaultCheckboxColDef,
   {
+    // tree: true,
     name: "Name",
     key: "name",
-    fixed: "right",
     width: 100
   },
   { name: "Param", key: "param", renderer: (value) => <div style={{ color: "red" }}>{value.name as string}</div> },
@@ -69,8 +68,7 @@ const colDefs: Array<ColumnDefinition<ExampleObj>> = [
 const App = () => {
   return (
     <div>
-      <Checkbox/>
-      <div style={{ height: "500px" }}><Table data={data} colDefs={colDefs}/></div>
+      <div style={{ height: "500px" }}><Table data={treeData} colDefs={colDefs} treeBy={"children"}/></div>
     </div>
   );
 };
