@@ -31,6 +31,7 @@ export interface TableProps<RowType extends Row> {
   colDefs: Array<ColumnDefinition<RowType>>;
   onSelect?: (selected: Record<RowType["id"], boolean>) => void;
   onExpand?: (expanded: Record<RowType["id"], boolean>) => void;
+  onContext?: (event: React.MouseEvent<HTMLDivElement, MouseEvent>, row?: RowType | TechRow<RowType>) => void;
   selectionType?: "multiple" | "single";
   rowHeight?: number;
   headerHeight?: number;
@@ -71,6 +72,7 @@ export interface TableApi<RowType> {
   expanded: Record<PossibleIdType, boolean>;
   forceUpdate: () => void;
   selectAll: () => void;
+  onContext?: (event: React.MouseEvent<HTMLDivElement, MouseEvent>, row?: RowType | TechRow<RowType>) => void;
   clearSelection: () => void;
   allRows: Array<RowType | TechRow<RowType>>;
   treeBy?: keyof RowType;

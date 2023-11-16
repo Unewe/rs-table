@@ -33,12 +33,22 @@ export const TableContent = <T extends Row>({
   const { rowHeight, headerHeight, virtualization } = apiRef.current;
   const edge = useMemo(() => capacity + offset, [capacity, offset]);
   const containerHeight = visibleRows.length * rowHeight;
+  const [wrapperWidth, setWrapperWidth] = useState(tableRef.current?.clientWidth);
   const verticalScrollbarRef = React.useRef<VerticalScrollbarRef>(null);
 
   const virtualRows = useMemo(
     () => (virtualization ? visibleRows.slice(offset, edge) : visibleRows),
     [visibleRows, offset, edge]
   );
+
+  // Следим за изменением ширины таблицы.
+  useEffect(() => {
+    setTimeout(() => {
+      if (wrapperWidth !== tableRef.current?.clientWidth) {
+        setWrapperWidth(tableRef.current?.clientWidth);
+      }
+    });
+  });
 
   const verticalThumbHeight = useMemo(() => {
     const clientHeight = tableRef.current?.clientHeight ?? 0;
@@ -48,12 +58,12 @@ export const TableContent = <T extends Row>({
   }, [tableRef.current, containerHeight]);
 
   const horizontalThumbWidth = useMemo(() => {
-    const clientWidth = tableRef.current?.clientWidth ?? 0;
+    const clientWidth = wrapperWidth ?? 0;
     const tableWidth = colDefsRef.current?.map(value => value.width).reduce((acc, value) => acc + value, 0) ?? 0;
     const thumbWidth = (clientWidth * clientWidth) / tableWidth;
 
     return thumbWidth < 20 ? 20 : thumbWidth;
-  }, [colDefsRef.current]);
+  }, [colDefsRef.current, wrapperWidth]);
 
   useEffect(() => {
     verticalScrollbarRef.current?.updateThumbPosition();
@@ -91,13 +101,23 @@ export const TableContent = <T extends Row>({
     );
   }, [virtualRows, offset, edge, selected]);
 
+  const contextHandler = apiRef.current?.onContext
+    ? (event: React.MouseEvent<HTMLDivElement, MouseEvent>) => {
+      event.stopPropagation();
+      apiRef.current?.onContext?.(event, undefined);
+    }
+    : undefined;
+
+  const height = `calc(100% - ${headerHeight}px)`;
+
   return (
     <>
       <div
         ref={tableRef}
         className={tableWrapperClassName}
-        style={{ maxHeight: `calc(100% - ${headerHeight}px)`, maxWidth: "100%", width: "100%" }}
+        style={{ maxHeight: height, height, maxWidth: "100%", width: "100%" }}
         onScrollCapture={onScroll}
+        onContextMenu={contextHandler}
       >
         <div className={tableContainerClassName} style={{ height: containerHeight + "px" }}>
           {tableRows}

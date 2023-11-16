@@ -21,10 +21,17 @@ const TableRowRenderer = <T extends Row>({
 }: TableRowProps<T>): React.ReactElement => {
   const { rowHeight, selectionType, treeBy, selectRow, selected } = apiRef.current;
   const clickHandler = selectionType === "single" || treeBy ? () => selectRow(row.id) : undefined;
+  const contextHandler = apiRef.current?.onContext
+    ? (event: React.MouseEvent<HTMLDivElement, MouseEvent>) => {
+      event.stopPropagation();
+      apiRef.current?.onContext?.(event, row);
+    }
+    : undefined;
   return (
     <div
       id={row.id.toString()}
       onClick={clickHandler}
+      onContextMenu={contextHandler}
       className={"rs-table-row" + (selected[row.id] ? " rs-selected" : "")}
       style={{ transform: `translateY(${rowHeight * (offset + index)}px)`, height: `${rowHeight}px` }}
     >

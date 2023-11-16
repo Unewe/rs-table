@@ -12,6 +12,8 @@ const DEFAULT_ROW_HEIGHT = 38;
 const DEFAULT_HEADER_HEIGHT = 35;
 const MIN_WIDTH = 60;
 
+const stub = (): void => {};
+
 function Table<T extends Row>(props: TableProps<T>): React.ReactElement {
   const {
     data,
@@ -29,6 +31,7 @@ function Table<T extends Row>(props: TableProps<T>): React.ReactElement {
     onColDefChange,
     filterComponent,
     onExpand,
+    onContext,
   } = props;
   const [update, setUpdate] = useState(false);
   const [expanded, setExpanded] = useState<Record<Row["id"], boolean>>(state?.expanded ?? {});
@@ -44,12 +47,12 @@ function Table<T extends Row>(props: TableProps<T>): React.ReactElement {
   const apiRef = useRef<TableApi<T>>({
     expanded: {},
     selected: {},
-    expandRow: () => {},
-    selectRow: () => {},
-    forceUpdate: () => {},
+    expandRow: stub,
+    selectRow: stub,
+    forceUpdate: stub,
     allRows: [],
-    clearSelection: () => {},
-    selectAll: () => {},
+    clearSelection: stub,
+    selectAll: stub,
     selectedCount: selectedCounterRef.current,
     rowHeight,
     headerHeight,
@@ -190,6 +193,7 @@ function Table<T extends Row>(props: TableProps<T>): React.ReactElement {
 
   apiRef.current = {
     ...apiRef.current,
+    onContext,
     expanded,
     selected,
     expandRow,
