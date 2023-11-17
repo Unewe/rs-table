@@ -1,5 +1,6 @@
 import React, { MutableRefObject } from "react";
 import { DialogRef } from "../dialog/Dialog";
+import {TableCache} from "../../utils/cacheUtils";
 
 export type PossibleIdType = string | number;
 export type Row = Record<"id", PossibleIdType>;
@@ -94,6 +95,7 @@ export interface TableApi<RowType> {
   setFilter: React.Dispatch<React.SetStateAction<Filter<RowType> | undefined>>;
   filter?: Filter<RowType>;
   filterComponent?: React.FC<FilterProps<RowType>>;
+  cacheRef: TableCache;
 }
 
 export interface FilterProps<T> {

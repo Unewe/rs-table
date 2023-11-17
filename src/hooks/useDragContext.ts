@@ -1,5 +1,6 @@
-import { cacheRef, getEventPosition } from "../utils";
+import { getEventPosition } from "../utils";
 import { Position } from "../components";
+import {TableCache} from "../utils/cacheUtils";
 
 export type PointerListenerWithDirection = (event: PointerEvent, movement: Position) => void;
 export type PointerListener = (event: PointerEvent) => void;
@@ -10,7 +11,8 @@ type DragEventInitiator = (
   onDrop?: PointerListener,
   cacheName?: string,
   immediate?: boolean,
-  cursor?: string
+  cursor?: string,
+  cacheRef?: TableCache
 ) => void;
 
 const stopPropagation = (event: MouseEvent): void => event.stopPropagation();
@@ -25,6 +27,7 @@ class DragContext {
   private isDragging = false;
   private cursor?: string;
   private previousCursor?: string;
+  private cacheRef?: TableCache;
 
   initiator: PointerListener = event => {
     const position = getEventPosition(event);
@@ -44,14 +47,14 @@ class DragContext {
       document.addEventListener("click", stopPropagation, true);
 
       this.previousPosition = position;
-      const dragElementRef = cacheRef.cells[this.cacheName];
+      const dragElementRef = this.cacheRef?.cells[this.cacheName];
       if (dragElementRef?.current) {
         dragElementRef.current.classList.add("rs-dragged");
       }
     }
   };
 
-  onMouseDown: DragEventInitiator = (event, onDrag, onDrop, cacheName = "", immediate = false, cursor = "") => {
+  onMouseDown: DragEventInitiator = (event, onDrag, onDrop, cacheName = "", immediate = false, cursor = "", cacheRef) => {
     event.stopPropagation();
     this.cursor = cursor;
     this.initialPosition = getEventPosition(event);
@@ -59,6 +62,7 @@ class DragContext {
     this.onDrop = onDrop;
     this.cacheName = cacheName;
     this.immediate = immediate;
+    this.cacheRef = cacheRef;
     document.addEventListener("pointermove", this.initiator, true);
     document.addEventListener("pointerup", this.onMouseUp, true);
     if (this.cursor) {
@@ -96,10 +100,11 @@ class DragContext {
       document.removeEventListener("click", stopPropagation, true);
     }, 0);
 
-    const dragElementRef = cacheRef.cells[this.cacheName];
+    const dragElementRef = this.cacheRef?.cells[this.cacheName];
     if (dragElementRef?.current) {
       dragElementRef.current.classList.remove("rs-dragged");
     }
+    this.cacheRef = undefined;
     this.cacheName = "";
 
     if (this.cursor) {

@@ -84,7 +84,7 @@ export const TableContent = <T extends Row>({
   };
 
   const tableRows = useMemo(() => {
-    clearCellCache();
+    clearCellCache(apiRef.current.cacheRef);
     return virtualRows.map((row, index) =>
       "$type" in row && row.$type === "_GroupRow" ? (
         <GroupRowRenderer key={row.id} offset={offset} index={index} row={row} apiRef={apiRef} />

@@ -7,6 +7,7 @@ import HeaderCell from "./HeaderCell";
 import { treeCellRenderer, cellRenderer } from "./Renderers";
 import { Filter, Position, RequiredDefinition, Row, Sort, TableApi, TableProps } from "./Table.types";
 import { TableContent } from "./TableContent";
+import { TableCache } from "../../utils/cacheUtils";
 
 const DEFAULT_ROW_HEIGHT = 38;
 const DEFAULT_HEADER_HEIGHT = 35;
@@ -43,6 +44,7 @@ function Table<T extends Row>(props: TableProps<T>): React.ReactElement {
   const tableRef = useRef<HTMLDivElement>(null);
   const [capacity, setCapacity] = useState(0);
   const colDefsRef = useRef<Array<RequiredDefinition<T>>>([]);
+  const cacheRef = useRef<TableCache>({ cells: {}, headerCells: {} });
 
   const apiRef = useRef<TableApi<T>>({
     expanded: {},
@@ -65,6 +67,7 @@ function Table<T extends Row>(props: TableProps<T>): React.ReactElement {
     colDefsRef,
     setSort,
     setFilter,
+    cacheRef: cacheRef.current
   });
 
   const {
@@ -220,7 +223,7 @@ function Table<T extends Row>(props: TableProps<T>): React.ReactElement {
 
   const handleDrag = useCallback((event: MouseEvent, movement: Position, colDef: RequiredDefinition<T>): void => {
     if (colDef.draggable !== false) {
-      const newColRefs = updateDefsPosition(event, movement, tableRef, colDef, colDefsRef, apiRef);
+      const newColRefs = updateDefsPosition(event, movement, tableRef, colDef, colDefsRef, apiRef, cacheRef.current);
 
       if (newColRefs != null) {
         colDefsRef.current = newColRefs;
@@ -237,6 +240,7 @@ function Table<T extends Row>(props: TableProps<T>): React.ReactElement {
             dragId={`header_${col.key.toString()}`}
             onDrag={(event: MouseEvent, movement: Position) => handleDrag(event, movement, col)}
             onDrop={apiRef.current.forceUpdate}
+            cacheRef={cacheRef.current}
           >
             <HeaderCell col={col} headerHeight={headerHeight} colDefsRef={colDefsRef} apiRef={apiRef} />
           </Draggable>

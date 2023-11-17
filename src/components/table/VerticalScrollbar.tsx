@@ -3,8 +3,6 @@ import Draggable from "./Draggable";
 import { getClassName } from "../../utils";
 import { Position, TableApi } from "./Table.types";
 
-export const verticalScrollBarRef: React.RefObject<HTMLDivElement> = React.createRef();
-const scrollbarRef: React.RefObject<HTMLDivElement> = React.createRef();
 export let scrollBlocker = false;
 
 interface VerticalScrollbarProps {
@@ -19,6 +17,8 @@ export interface VerticalScrollbarRef {
 
 const VerticalScrollbar = React.forwardRef<VerticalScrollbarRef, VerticalScrollbarProps>(
   ({ apiRef, containerRef, thumbHeight }, ref) => {
+    const verticalScrollBarRef: React.RefObject<HTMLDivElement> = React.createRef();
+    const scrollbarRef: React.RefObject<HTMLDivElement> = React.createRef();
     const [hidden, setHidden] = useState(true);
     const { headerHeight } = apiRef.current;
     const updateThumbPosition = (): void => {
@@ -87,7 +87,7 @@ const VerticalScrollbar = React.forwardRef<VerticalScrollbarRef, VerticalScrollb
         style={{ height: `calc(100% - ${headerHeight}px)`, top: `${headerHeight}px` }}
         onPointerDown={scrollTo}
       >
-        <Draggable onDrag={onDrag} onDrop={onDrop} immediate={true}>
+        <Draggable onDrag={onDrag} onDrop={onDrop} immediate={true} cacheRef={apiRef.current.cacheRef}>
           <div
             className={getClassName("scrollbar-thumb")}
             ref={verticalScrollBarRef}

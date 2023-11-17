@@ -16,7 +16,7 @@ const TableCell: React.FC<TableCellProps> = ({ col, row, apiRef }): React.ReactE
     <div
       key={col.key.toString()}
       className={cellClassName}
-      ref={getCellRef(`${row.id.toString()}_${col.key.toString()}`)}
+      ref={getCellRef(apiRef.current.cacheRef, `${row.id.toString()}_${col.key.toString()}`)}
       aria-colindex={col.index}
       style={{
         left: `${col.left}px`,

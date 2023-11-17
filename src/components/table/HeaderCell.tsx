@@ -52,7 +52,7 @@ const HeaderCell = <T extends TechRow<Row>>({
 
   return (
     <div
-      ref={getCellRef(col.key.toString(), true)}
+      ref={getCellRef(apiRef.current.cacheRef, col.key.toString(), true)}
       {...props}
       aria-colindex={col.index}
       onClick={handleSortClick}
@@ -81,9 +81,10 @@ const HeaderCell = <T extends TechRow<Row>>({
       ) : null}
       {col.resizable && (
         <Draggable
-          onDrag={event => resizeColumn(event, col, colDefsRef)}
+          onDrag={event => resizeColumn(event, col, colDefsRef, apiRef.current.cacheRef)}
           cursor={"col-resize"}
           onDrop={() => applyResize(apiRef)}
+          cacheRef={apiRef.current.cacheRef}
         >
           <div className={getClassName("resize")} />
         </Draggable>

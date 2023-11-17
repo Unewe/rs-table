@@ -1,6 +1,6 @@
 import React from "react";
-import { cacheRef } from "./cacheUtils";
 import { Position, RequiredDefinition, Row, TableApi } from "../components";
+import {TableCache} from "./cacheUtils";
 
 /**
  * Метод определяет и возвращает новые позиции колонок.
@@ -10,6 +10,7 @@ import { Position, RequiredDefinition, Row, TableApi } from "../components";
  * @param colDef перетаскиваемая колонка.
  * @param colDefsRef все колонки.
  * @param apiRef API.
+ * @param cacheRef
  *
  * @return undefined если ничего не изменилось, или новые colDefs.
  */
@@ -19,7 +20,8 @@ export function updateDefsPosition<T extends Row>(
   tableRef: React.RefObject<HTMLDivElement>,
   colDef: RequiredDefinition<T>,
   colDefsRef: React.RefObject<Array<RequiredDefinition<T>>>,
-  apiRef: React.MutableRefObject<TableApi<T>>
+  apiRef: React.MutableRefObject<TableApi<T>>,
+  cacheRef: TableCache
 ): Array<RequiredDefinition<T>> | undefined {
   const { scrollPosition } = apiRef.current;
   const colDefs = colDefsRef.current!;
@@ -129,7 +131,8 @@ const cachedRecord: React.MutableRefObject<null | Record<number, Array<React.Ref
 export const resizeColumn = <T extends Row>(
   event: MouseEvent,
   colDef: RequiredDefinition<T>,
-  colDefsRef: React.RefObject<Array<RequiredDefinition<T>>>
+  colDefsRef: React.RefObject<Array<RequiredDefinition<T>>>,
+  cacheRef: TableCache,
 ): void => {
   if (cachedRecord.current === null) {
     cachedRecord.current = Object.values(cacheRef.cells).reduce<Record<number, Array<React.RefObject<HTMLDivElement>>>>(
@@ -171,6 +174,7 @@ export const resizeColumn = <T extends Row>(
 };
 
 export const applyResize = <T>(apiRef: React.MutableRefObject<TableApi<T>>): void => {
+  const cacheRef = apiRef.current.cacheRef;
   apiRef.current.colDefsRef.current = apiRef.current.colDefsRef.current.map(value => {
     const width = parseInt(cacheRef.headerCells[String(value.key)].current?.style.width ?? "0");
     const left = parseInt(cacheRef.headerCells[String(value.key)].current?.style.left ?? "0");

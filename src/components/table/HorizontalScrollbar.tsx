@@ -1,10 +1,7 @@
 import React, { useEffect, useState } from "react";
-import { cacheRef, getClassName } from "../../utils";
+import { getClassName } from "../../utils";
 import Draggable from "./Draggable";
 import { Position, RequiredDefinition, TableApi } from "./Table.types";
-
-const scrollbarRef = React.createRef<HTMLDivElement>();
-const horizontalScrollBarRef = React.createRef<HTMLDivElement>();
 
 interface HorizontalScrollbarProps {
   apiRef: React.MutableRefObject<TableApi<any>>;
@@ -19,9 +16,12 @@ export const HorizontalScrollbar: React.FC<HorizontalScrollbarProps> = ({
   colDefsRef,
   apiRef,
 }) => {
+  const scrollbarRef = React.createRef<HTMLDivElement>();
+  const horizontalScrollBarRef = React.createRef<HTMLDivElement>();
   const { scrollPosition, width, wrapperRef } = apiRef.current;
   const [hidden, setHidden] = useState(true);
   const cachedCells = React.useRef<Array<React.RefObject<HTMLDivElement>> | undefined>(undefined);
+  const cacheRef = apiRef.current.cacheRef;
 
   const initCache = (): void => {
     const fixedColumns = colDefsRef.current?.filter(value => value.fixed).map(value => value.key) ?? [];
@@ -120,7 +120,7 @@ export const HorizontalScrollbar: React.FC<HorizontalScrollbarProps> = ({
       ref={scrollbarRef}
       onPointerDown={scrollTo}
     >
-      <Draggable onDrag={onDrag} onDrop={onDrop} immediate={true}>
+      <Draggable onDrag={onDrag} onDrop={onDrop} immediate={true} cacheRef={cacheRef}>
         <div
           className={getClassName("scrollbar-thumb")}
           ref={horizontalScrollBarRef}
