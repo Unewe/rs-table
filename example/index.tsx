@@ -54,7 +54,7 @@ const treeData: Array<ExampleObj> = getTreeData(getSimpleData(15));
 const colDefs: Array<ColumnDefinition<ExampleObj>> = [
   defaultCheckboxColDef,
   {
-    // tree: true,
+    tree: true,
     name: "Name",
     key: "name",
     width: 100
@@ -67,8 +67,9 @@ const colDefs: Array<ColumnDefinition<ExampleObj>> = [
 
 const App = () => {
   return (
-    <div>
-      <div style={{ height: "500px" }}><Table data={treeData} colDefs={colDefs} treeBy={"children"}/></div>
+    <div style={{display: "flex"}}>
+      <div style={{ height: "500px", width: "50%" }}><Table data={treeData} colDefs={colDefs} treeBy={"children"}/></div>
+      <div style={{ height: "500px", width: "50%" }}><Table data={treeData} colDefs={colDefs} treeBy={"children"}/></div>
     </div>
   );
 };
