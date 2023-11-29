@@ -33,6 +33,7 @@ function Table<T extends Row>(props: TableProps<T>): React.ReactElement {
     filterComponent,
     onExpand,
     onContext,
+    tableApiRef,
   } = props;
   const [update, setUpdate] = useState(false);
   const [expanded, setExpanded] = useState<Record<Row["id"], boolean>>(state?.expanded ?? {});
@@ -220,6 +221,8 @@ function Table<T extends Row>(props: TableProps<T>): React.ReactElement {
     filterComponent,
     width: colDefsRef.current?.map(value => value.width).reduce((acc, value) => acc + value, 0) ?? 0,
   };
+
+  if (tableApiRef) tableApiRef.current = apiRef.current;
 
   const handleDrag = useCallback((event: MouseEvent, movement: Position, colDef: RequiredDefinition<T>): void => {
     if (colDef.draggable !== false) {

@@ -44,6 +44,7 @@ export interface TableProps<RowType extends Row> {
   groupRowRenderer?: GroupRowRenderer;
   filterComponent?: React.FC<FilterProps<RowType>>;
   onColDefChange?: (colDefs: Array<ColumnDefinition<RowType>>) => void;
+  tableApiRef?: MutableRefObject<TableApi<RowType> | undefined>;
 }
 
 export interface TableState<RowType extends Row> {
